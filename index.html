@@ -71,6 +71,7 @@ textarea{min-height:150px;resize:vertical}
 @media (prefers-color-scheme: dark){ .btn{color:#10201a} }
 .btn[disabled]{opacity:.5;cursor:default}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.btn.small{padding:8px 14px;font-size:.92rem}
 .wb{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
 .wb span{background:var(--accent-soft);color:var(--accent);border-radius:99px;padding:2px 10px;font-size:.85rem}
 .wb span.used{background:var(--accent);color:#fff}
@@ -80,8 +81,33 @@ textarea{min-height:150px;resize:vertical}
 .fb.no{background:var(--bad-soft)}
 .err{color:var(--bad);margin:10px 0 0;font-size:.92rem}
 .result{background:var(--accent-soft);border-radius:12px;padding:12px 16px;margin-bottom:12px}
-.hwlist{display:grid;gap:10px}
-.hwitem{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.list{display:grid;gap:10px}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--card)}
+.item .t{min-width:0}
+
+/* word cards */
+.folders{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.folder{text-align:left;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:16px;padding:16px;cursor:pointer;font:inherit}
+.folder:hover{border-color:var(--accent)}
+.folder b{display:block;font-size:1.05rem}
+.folder .hint{margin-top:2px}
+.folder .bar{height:8px;margin-top:10px}
+.deckbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.stage{perspective:1200px}
+.flip{position:relative;width:100%;min-height:260px;cursor:pointer;transform-style:preserve-3d;transition:transform .5s;border-radius:20px;outline-offset:3px}
+.flip.on{transform:rotateY(180deg)}
+@media (prefers-reduced-motion: reduce){ .flip{transition:none} }
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;border-radius:20px;border:1px solid var(--line)}
+.face.front{background:var(--accent-soft)}
+.face.front .w{font-size:2rem;font-weight:700;letter-spacing:-.01em}
+.face.back{background:var(--card);transform:rotateY(180deg)}
+.face.back .m{font-size:1.5rem;font-weight:600}
+.face.back .e{margin-top:12px;color:var(--muted);font-style:italic}
+.face .tap{position:absolute;bottom:12px;font-size:.78rem;color:var(--muted)}
+.controls{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.qlist{counter-reset:q;display:grid;gap:8px}
+.qrow{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--card)}
+.qrow .n{color:var(--muted);min-width:1.6em}
 </style>
 </head>
 <body>
@@ -91,7 +117,7 @@ textarea{min-height:150px;resize:vertical}
 /* ============ SETTINGS: edit these two lines once ============
    SHEET_ID   = the long ID from your Google Sheet link (between /d/ and /edit)
    SCRIPT_URL = the web app link from the Apps Script step (lets homework answers save to your sheet)
-   Leave both empty to preview the page. */
+   Leave both empty to preview the page with starter content. */
 const SHEET_ID = "1q6sWG2PqcPY3r38C2nmXy0gPAbewryZOpewSnkoxb6c";
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw38WrRmK22QwpGOzQ9h8ys03MLv847wSNtmsKwcAPB0MDPx2-1Em1ZELsxffeLk1GA/exec";
 /* =============================================================== */
@@ -111,7 +137,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw38WrRmK22QwpGOzQ9h
 <div class="card big" style="margin-bottom:14px">
   <h2>Overall progress to goal: <span id="goal">Strong B1</span></h2>
   <div class="bar"><i id="overallBar" style="width:0"></i><span class="marker" style="left:100%;margin-left:-2px"></span></div>
-  <div class="row"><small id="overallNote">Based on skill ratings and words learned</small><b id="overallPct">0%</b></div>
+  <div class="row"><small>Based on skill ratings and words learned</small><b id="overallPct">0%</b></div>
 </div>
 
 <div class="grid">
@@ -129,7 +155,8 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw38WrRmK22QwpGOzQ9h
 <div class="tabs" role="tablist">
   <button role="tab" aria-selected="true" data-tab="lessons">Lessons</button>
   <button role="tab" aria-selected="false" data-tab="homework">Homework</button>
-  <button role="tab" aria-selected="false" data-tab="words">Word bank</button>
+  <button role="tab" aria-selected="false" data-tab="words">Word cards</button>
+  <button role="tab" aria-selected="false" data-tab="speaking">Speaking</button>
   <button role="tab" aria-selected="false" data-tab="mistakes">Mistakes</button>
   <button role="tab" aria-selected="false" data-tab="mock">Mock tests</button>
 </div>
@@ -139,62 +166,11 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw38WrRmK22QwpGOzQ9h
 </div>
 
 <script>
-/* ================= HOMEWORK CONTENT (add new homework here) ================= */
-const WORDBANK = ["cope with","avoid","affect","flexible","manage to","occur","in advance","unstable","stay up late","switch off","behave","balance"];
-const HOMEWORK = [
-{
-  id:"HW1", lesson:1,
-  title:"Homework 1: Routines (present simple and present continuous)",
-  intro:"Based on the text from lesson 1. Do all three parts, then press Submit. You will see your score and why each answer is right or wrong.",
-  ex1:[
-    {q:"Anna ___ up at 7:00 every morning.", opts:["wakes","is waking","wake"], a:0,
-     why:["Every morning is a habit, so we use present simple. With she, the verb needs -s.","Is waking is for something happening right now, not a repeated habit.","With she/he/it the verb needs -s (wakes)."]},
-    {q:"Right now I ___ my homework.", opts:["do","am doing","does"], a:1,
-     why:["Do is for habits. Right now means it is happening at this moment.","Right now means in progress, so use present continuous: am + verb-ing.","Does goes with he/she/it, and it is the habit form."]},
-    {q:"She never ___ her phone at breakfast.", opts:["is checking","checks","check"], a:1,
-     why:["Never shows a habit, so present simple is needed, not continuous.","A habit word (never) + she gives checks.","With she the verb needs -s (checks)."]},
-    {q:"This week she ___ from her parents' house.", opts:["works","is working","work"], a:1,
-     why:["Works is for a permanent habit. This week is temporary and different from normal.","A temporary situation around now takes present continuous.","Work is missing -s, and it is not the right tense for a temporary situation."]},
-    {q:"Listen! Someone ___ at the door.", opts:["knocks","is knocking","knock"], a:1,
-     why:["Knocks describes a habit. Listen! means it is happening now.","Happening at this moment, so present continuous.","Knock is missing -s, and the tense is wrong for something happening now."]},
-    {q:"___ you drink a lot of coffee?", opts:["Are","Do","Does"], a:1,
-     why:["Are goes with -ing (Are you drinking?). A question about a habit uses do.","Do + you + base verb is the present simple question form.","Does is only for he/she/it."]},
-    {q:"He ___ like coffee in the evening.", opts:["doesn't","isn't","don't"], a:0,
-     why:["With he, the negative is doesn't + base verb.","Isn't needs a verb-ing after it, and it is a habit here.","Don't is for I/you/we/they, not for he."]},
-    {q:"I ___ for a better work-life balance these days.", opts:["look","am looking","looks"], a:1,
-     why:["These days is a temporary period around now, and look sounds like a permanent habit.","These days (temporary, around now) takes present continuous.","Looks is for he/she/it, not for I."]}
-  ],
-  ex2:[
-    {pre:"Many people use a routine to ", post:" with stress.", ans:["cope"], hint:"c…  (a way to deal with a problem)"},
-    {pre:"She tries to ", post:" her phone during breakfast.", ans:["avoid"], hint:"a…  (not do something)"},
-    {pre:"Lack of sleep ", post:" my mood.", ans:["affects"], hint:"a…  (he/she/it form)"},
-    {pre:"My schedule is very ", post:". I can change it easily.", ans:["flexible"], hint:"f…"},
-    {pre:"Problems sometimes ", post:" when the power goes out.", ans:["occur"], hint:"o…  (happen)"},
-    {pre:"She charges her devices ", post:" advance.", ans:["in"], hint:"2 letters, means before it is needed"},
-    {pre:"At 7 p.m. I ", post:" off my laptop.", ans:["switch"], hint:"s…"},
-    {pre:"My internet is ", post:" today, so I work from a café.", ans:["unstable"], hint:"u…  (not working well all the time)"},
-    {pre:"Right now Anna ", post:" (work) from a café.", ans:["is working","'s working"], hint:"present continuous"},
-    {pre:"She ", post:" (not drink) coffee in the evening.", ans:["doesn't drink","does not drink"], hint:"present simple, negative"}
-  ],
-  ex3:{
-    prompt:"Write 6 to 8 sentences about your own routine. What do you usually do on a normal day? What is different for you this week or in these days (work, war, life)? Use at least 4 words from the word bank.",
-    minWords:40
-  }
-}
-];
+/*STARTER*/
+const STARTER = {"Settings": [{"Setting": "Student name", "Value": ""}, {"Setting": "Test date", "Value": "2026-11-15"}, {"Setting": "Goal", "Value": "Strong B1"}, {"Setting": "Total lessons planned", "Value": "12"}, {"Setting": "Words goal", "Value": "150"}, {"Setting": "Target skill rating (1-5)", "Value": "4"}], "Lessons": [{"#": "1", "Date": "2026-10-22", "Topic (what you actually did)": "Daily routine & work-life balance", "Grammar": "Present simple vs present continuous", "Homework given": "Homework 1 in the app + learn the 12 words", "Status": "Today"}], "Words": [{"Word / phrase": "cope with", "Meaning / translation": "справлятися з", "Example sentence": "Many people cope with stress by keeping a routine.", "Lesson #": "1", "Learned? (yes/no)": ""}, {"Word / phrase": "avoid", "Meaning / translation": "уникати", "Example sentence": "She tries to avoid her phone at breakfast.", "Lesson #": "1", "Learned? (yes/no)": ""}, {"Word / phrase": "affect", "Meaning / translation": "впливати", "Example sentence": "Sleep affects my mood.", "Lesson #": "1", "Learned? (yes/no)": ""}, {"Word / phrase": "flexible", "Meaning / translation": "гнучкий", "Example sentence": "My schedule is flexible.", "Lesson #": "1", "Learned? (yes/no)": ""}, {"Word / phrase": "manage to", "Meaning / translation": "вдаватися, встигати", "Example sentence": "I usually manage to finish before lunch.", "Lesson #": "1", "Learned? (yes/no)": ""}, {"Word / phrase": "occur", "Meaning / translation": "траплятися", "Example sentence": "Problems sometimes occur.", "Lesson #": "1", "Learned? (yes/no)": ""}, {"Word / phrase": "in advance", "Meaning / translation": "заздалегідь", "Example sentence": "She charges her devices in advance.", "Lesson #": "1", "Learned? (yes/no)": ""}, {"Word / phrase": "unstable", "Meaning / translation": "нестабільний", "Example sentence": "My internet is unstable today.", "Lesson #": "1", "Learned? (yes/no)": ""}, {"Word / phrase": "stay up late", "Meaning / translation": "лягати пізно", "Example sentence": "He often stays up late.", "Lesson #": "1", "Learned? (yes/no)": ""}, {"Word / phrase": "switch off", "Meaning / translation": "вимикати", "Example sentence": "I switch off my laptop at 7 p.m.", "Lesson #": "1", "Learned? (yes/no)": ""}, {"Word / phrase": "behave", "Meaning / translation": "поводитися", "Example sentence": "I can decide how I behave.", "Lesson #": "1", "Learned? (yes/no)": ""}, {"Word / phrase": "balance", "Meaning / translation": "баланс", "Example sentence": "I'm looking for a better work-life balance.", "Lesson #": "1", "Learned? (yes/no)": ""}], "Mistakes": [], "Mock": [], "Submissions": [], "Answers": [], "Homework": [{"ID": "HW1", "Lesson": "1", "Title": "Homework 1: Routines (present simple and present continuous)", "Intro": "Based on the text from lesson 1. Do all three parts, then press Submit. You will see your score and why each answer is right or wrong.", "Published (yes/no)": "yes"}], "Homework questions": [{"Homework": "HW1", "Part": "1", "#": "1", "Question": "Anna ___ up at 7:00 every morning.", "Option A": "wakes", "Option B": "is waking", "Option C": "wake", "Correct": "A", "Hint": "", "Why A": "Every morning is a habit, so we use present simple. With she, the verb needs -s.", "Why B": "Is waking is for something happening right now, not a repeated habit.", "Why C": "With she/he/it the verb needs -s (wakes)."}, {"Homework": "HW1", "Part": "1", "#": "2", "Question": "Right now I ___ my homework.", "Option A": "do", "Option B": "am doing", "Option C": "does", "Correct": "B", "Hint": "", "Why A": "Do is for habits. Right now means it is happening at this moment.", "Why B": "Right now means in progress, so use present continuous: am + verb-ing.", "Why C": "Does goes with he/she/it, and it is the habit form."}, {"Homework": "HW1", "Part": "1", "#": "3", "Question": "She never ___ her phone at breakfast.", "Option A": "is checking", "Option B": "checks", "Option C": "check", "Correct": "B", "Hint": "", "Why A": "Never shows a habit, so present simple is needed, not continuous.", "Why B": "A habit word (never) + she gives checks.", "Why C": "With she the verb needs -s (checks)."}, {"Homework": "HW1", "Part": "1", "#": "4", "Question": "This week she ___ from her parents' house.", "Option A": "works", "Option B": "is working", "Option C": "work", "Correct": "B", "Hint": "", "Why A": "Works is for a permanent habit. This week is temporary and different from normal.", "Why B": "A temporary situation around now takes present continuous.", "Why C": "Work is missing -s, and it is not the right tense for a temporary situation."}, {"Homework": "HW1", "Part": "1", "#": "5", "Question": "Listen! Someone ___ at the door.", "Option A": "knocks", "Option B": "is knocking", "Option C": "knock", "Correct": "B", "Hint": "", "Why A": "Knocks describes a habit. Listen! means it is happening now.", "Why B": "Happening at this moment, so present continuous.", "Why C": "Knock is missing -s, and the tense is wrong for something happening now."}, {"Homework": "HW1", "Part": "1", "#": "6", "Question": "___ you drink a lot of coffee?", "Option A": "Are", "Option B": "Do", "Option C": "Does", "Correct": "B", "Hint": "", "Why A": "Are goes with -ing (Are you drinking?). A question about a habit uses do.", "Why B": "Do + you + base verb is the present simple question form.", "Why C": "Does is only for he/she/it."}, {"Homework": "HW1", "Part": "1", "#": "7", "Question": "He ___ like coffee in the evening.", "Option A": "doesn't", "Option B": "isn't", "Option C": "don't", "Correct": "A", "Hint": "", "Why A": "With he, the negative is doesn't + base verb.", "Why B": "Isn't needs a verb-ing after it, and it is a habit here.", "Why C": "Don't is for I/you/we/they, not for he."}, {"Homework": "HW1", "Part": "1", "#": "8", "Question": "I ___ for a better work-life balance these days.", "Option A": "look", "Option B": "am looking", "Option C": "looks", "Correct": "B", "Hint": "", "Why A": "These days is a temporary period around now, and look sounds like a permanent habit.", "Why B": "These days (temporary, around now) takes present continuous.", "Why C": "Looks is for he/she/it, not for I."}, {"Homework": "HW1", "Part": "2", "#": "1", "Question": "Many people use a routine to ___ with stress.", "Option A": "", "Option B": "", "Option C": "", "Correct": "cope", "Hint": "c...  (a way to deal with a problem)", "Why A": "", "Why B": "", "Why C": ""}, {"Homework": "HW1", "Part": "2", "#": "2", "Question": "She tries to ___ her phone during breakfast.", "Option A": "", "Option B": "", "Option C": "", "Correct": "avoid", "Hint": "a...  (not do something)", "Why A": "", "Why B": "", "Why C": ""}, {"Homework": "HW1", "Part": "2", "#": "3", "Question": "Lack of sleep ___ my mood.", "Option A": "", "Option B": "", "Option C": "", "Correct": "affects", "Hint": "a...  (he/she/it form)", "Why A": "", "Why B": "", "Why C": ""}, {"Homework": "HW1", "Part": "2", "#": "4", "Question": "My schedule is very ___. I can change it easily.", "Option A": "", "Option B": "", "Option C": "", "Correct": "flexible", "Hint": "f...", "Why A": "", "Why B": "", "Why C": ""}, {"Homework": "HW1", "Part": "2", "#": "5", "Question": "Problems sometimes ___ when the power goes out.", "Option A": "", "Option B": "", "Option C": "", "Correct": "occur", "Hint": "o...  (happen)", "Why A": "", "Why B": "", "Why C": ""}, {"Homework": "HW1", "Part": "2", "#": "6", "Question": "She charges her devices ___ advance.", "Option A": "", "Option B": "", "Option C": "", "Correct": "in", "Hint": "2 letters, means before it is needed", "Why A": "", "Why B": "", "Why C": ""}, {"Homework": "HW1", "Part": "2", "#": "7", "Question": "At 7 p.m. I ___ off my laptop.", "Option A": "", "Option B": "", "Option C": "", "Correct": "switch", "Hint": "s...", "Why A": "", "Why B": "", "Why C": ""}, {"Homework": "HW1", "Part": "2", "#": "8", "Question": "My internet is ___ today, so I work from a café.", "Option A": "", "Option B": "", "Option C": "", "Correct": "unstable", "Hint": "u...  (not working well all the time)", "Why A": "", "Why B": "", "Why C": ""}, {"Homework": "HW1", "Part": "2", "#": "9", "Question": "Right now Anna ___ (work) from a café.", "Option A": "", "Option B": "", "Option C": "", "Correct": "is working | 's working", "Hint": "present continuous", "Why A": "", "Why B": "", "Why C": ""}, {"Homework": "HW1", "Part": "2", "#": "10", "Question": "She ___ (not drink) coffee in the evening.", "Option A": "", "Option B": "", "Option C": "", "Correct": "doesn't drink | does not drink", "Hint": "present simple, negative", "Why A": "", "Why B": "", "Why C": ""}, {"Homework": "HW1", "Part": "3", "#": "1", "Question": "What are your hobbies?", "Option A": "in my free time | these days | at the moment | every weekend | I enjoy | I'm into | I'm learning | I'm trying to | relax | spend time | switch off | balance", "Option B": "", "Option C": "", "Correct": "40", "Hint": "Write 6 to 8 sentences. Say what you usually do in your free time, and what you are doing or learning these days. Use present simple for habits and present continuous for what is changing now. Try to use at least 4 expressions from the box.", "Why A": "", "Why B": "", "Why C": ""}], "Speaking questions": [{"#": "1", "Question": "Hi! How are you doing today?", "Topic": "Warm-up"}, {"#": "2", "Question": "Could you tell me a little bit about yourself?", "Topic": "About you"}, {"#": "3", "Question": "Where did you study?", "Topic": "Education"}, {"#": "4", "Question": "Could you tell me about your experience? Have you worked in a team?", "Topic": "Work"}, {"#": "5", "Question": "What are your hobbies?", "Topic": "Hobbies"}, {"#": "6", "Question": "What kind of music do you like? What is your taste in music?", "Topic": "Music"}, {"#": "7", "Question": "What are your favorite movies?", "Topic": "Movies"}, {"#": "8", "Question": "Why do you want to become a DevOps engineer?", "Topic": "Motivation"}, {"#": "9", "Question": "What are your strengths and weaknesses?", "Topic": "Strengths and weaknesses"}, {"#": "10", "Question": "What is your favorite sport? Which ones do you practice?", "Topic": "Sport"}, {"#": "11", "Question": "What are your plans for next weekend?", "Topic": "Plans"}]};
+/*END STARTER*/
 
-/* ================= STARTER DATA (day 1, before the sheet is connected) ================= */
-function starterData(){
-  const words=["cope with|справлятися з|Many people cope with stress by keeping a routine.","avoid|уникати|She tries to avoid her phone at breakfast.","affect|впливати|Sleep affects my mood.","flexible|гнучкий|My schedule is flexible.","manage to|вдаватися, встигати|I usually manage to finish before lunch.","occur|траплятися|Problems sometimes occur.","in advance|заздалегідь|She charges her devices in advance.","unstable|нестабільний|My internet is unstable today.","stay up late|лягати пізно|He often stays up late.","switch off|вимикати|I switch off my laptop at 7 p.m.","behave|поводитися|I can decide how I behave.","balance|баланс|I'm looking for a better work-life balance."];
-  return {
-    Settings:[{Setting:"Student name",Value:""},{Setting:"Test date",Value:"2026-11-15"},{Setting:"Goal",Value:"Strong B1"},{Setting:"Total lessons planned",Value:"12"},{Setting:"Words goal",Value:"150"},{Setting:"Target skill rating (1-5)",Value:"4"}],
-    Lessons:[{"#":"1",Date:"2026-10-22","Topic (what you actually did)":"Daily routine & work-life balance",Grammar:"Present simple vs present continuous","Homework given":"Homework 1 (3 exercises) + learn the 12 words",Status:"Today"}],
-    Words:words.map(w=>{const p=w.split("|");return {"Word / phrase":p[0],"Meaning / translation":p[1],"Example sentence":p[2],"Lesson #":"1","Learned? (yes/no)":""};}),
-    Mistakes:[], Mock:[], Submissions:[]
-  };
-}
-
-/* ================= CSV / helpers ================= */
+/* ================= helpers ================= */
 function parseCSV(text){
   const rows=[]; let row=[], cur="", q=false;
   for(let i=0;i<text.length;i++){
@@ -226,45 +202,87 @@ const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const num=s=>{const n=parseFloat(String(s).replace(",",".")); return isNaN(n)?null:n;};
 const fmtDate=d=>d?d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
 const $=id=>document.getElementById(id);
+const isYes=v=>/^(yes|y|так|\+|1|true)$/i.test(String(v||"").trim());
+const norm=s=>String(s||"").toLowerCase().replace(/[’`]/g,"'").replace(/\s+/g," ").trim();
+const countWords=t=>{const m=String(t||"").trim().match(/\S+/g);return m?m.length:0;};
 const store={
   get(k){try{return localStorage.getItem(k);}catch(e){return null;}},
   set(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 };
 
-/* ================= load ================= */
-const TABS=["Settings","Lessons","Words","Mistakes","Mock"];
+/* ================= load from the sheet ================= */
+// tab name -> a header that must exist (Google returns the FIRST tab when a name is missing, so we check)
+const TABS={
+  "Settings":"Setting","Lessons":"Date","Words":"Word / phrase","Mistakes":"Correct version","Mock":"Test",
+  "Homework":"Title","Homework questions":"Option A","Speaking questions":"Topic",
+  "Submissions":"Part 3 text","Answers":"His answer"
+};
 async function loadTab(name){
   const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
   const r=await fetch(url,{cache:"no-store"});
   if(!r.ok) throw new Error(name+": HTTP "+r.status);
   const t=await r.text();
   if(t.trim().startsWith("<")) throw new Error(name+": sheet is not shared with 'Anyone with the link'");
-  return toObjects(parseCSV(t));
+  const rows=parseCSV(t);
+  if(!rows.length||!rows[0].map(s=>s.trim()).includes(TABS[name])) return [];   // tab missing or wrong tab
+  return toObjects(rows);
 }
 async function loadAll(){
-  if(!SHEET_ID) return starterData();
-  const res=await Promise.all(TABS.map(loadTab));
-  const data={}; TABS.forEach((n,i)=>data[n]=res[i]);
-  try{ const s=await loadTab("Submissions"); data.Submissions=s.filter(r=>r.Homework); }catch(e){ data.Submissions=[]; }
+  if(!SHEET_ID) return JSON.parse(JSON.stringify(STARTER));
+  const names=Object.keys(TABS);
+  const res=await Promise.all(names.map(n=>loadTab(n).catch(e=>{ if(["Settings","Lessons","Words"].includes(n)) throw e; return []; })));
+  const data={}; names.forEach((n,i)=>data[n]=res[i]);
   return data;
 }
+
+/* ================= build homework from sheet rows ================= */
+function buildHomeworks(data){
+  const items=data["Homework questions"]||[];
+  return (data["Homework"]||[]).filter(h=>h.ID&&isYes(h["Published (yes/no)"])).map(h=>{
+    const rows=items.filter(r=>r.Homework===h.ID);
+    const part=p=>rows.filter(r=>String(r.Part).trim()===String(p)).sort((a,b)=>num(a["#"])-num(b["#"]));
+    const ex1=part(1).map(r=>{
+      const opts=[r["Option A"],r["Option B"],r["Option C"]];
+      const whys=[r["Why A"],r["Why B"],r["Why C"]];
+      const keep=opts.map((o,i)=>o?i:-1).filter(i=>i>=0);
+      const a=keep.indexOf("ABC".indexOf((r.Correct||"A").trim().toUpperCase()[0]));
+      return {q:r.Question,opts:keep.map(i=>opts[i]),why:keep.map(i=>whys[i]||""),a:Math.max(0,a)};
+    });
+    const ex2=part(2).map(r=>{
+      const k=r.Question.indexOf("___");
+      return {pre:k<0?r.Question+" ":r.Question.slice(0,k),post:k<0?"":r.Question.slice(k+3),
+        ans:String(r.Correct||"").split("|").map(s=>s.trim()).filter(Boolean),hint:r.Hint||""};
+    });
+    const p3=part(3)[0];
+    const ex3=p3?{q:p3.Question,instr:p3.Hint||"",bank:String(p3["Option A"]||"").split("|").map(s=>s.trim()).filter(Boolean),minWords:num(p3.Correct)||40}:null;
+    return {id:h.ID,lesson:h.Lesson,title:h.Title,intro:h.Intro||"",ex1,ex2,ex3};
+  });
+}
+
+/* ================= results (from the sheet, with a local fallback) ================= */
+function sheetResult(id){
+  const subs=(STATE.raw.Submissions||[]).filter(r=>r.Homework===id);
+  if(!subs.length) return null;
+  const last=subs[subs.length-1];
+  const all=(STATE.raw.Answers||[]).filter(r=>r.Homework===id);
+  const ts=all.length?all[all.length-1].Timestamp:null;
+  const det=all.filter(r=>r.Timestamp===ts).map(r=>({
+    part:String(r.Part).trim(),n:num(r["#"]),question:r.Question,his:r["His answer"],correct:r["Correct answer"],
+    ok:/^ok$/i.test(r.Result),why:r["Why his answer is wrong"]||"",rule:r["Why the correct answer is right"]||""}));
+  return {id,details:det,text:last["Part 3 text"]||"",used:last["Part 3 words from bank"]||"",scoreText:[last["Part 1 score"],last["Part 2 score"]],from:"sheet"};
+}
+function localResult(id){ try{ const s=store.get("hw_"+id); return s?JSON.parse(s):null; }catch(e){return null;} }
+function resultFor(id){ return sheetResult(id)||localResult(id); }
 
 /* ================= compute ================= */
 const SKILLS=[["Grammar (1-5)","Grammar"],["Vocabulary (1-5)","Vocabulary"],["Speaking (1-5)","Speaking"],["Pronunciation (1-5)","Pronunciation"]];
 let STATE=null, ACTIVE="lessons";
-const isYes=v=>/^(yes|y|так|\+|1|true)$/i.test(v);
-
-function localDone(){ return HOMEWORK.filter(h=>store.get("hw_"+h.id)).map(h=>h.id); }
 
 function compute(data){
   const S={}; (data.Settings||[]).forEach(r=>S[r.Setting]=r.Value);
   const cfg={
-    name:(S["Student name"]||"").trim(),
-    testDate:parseDate(S["Test date"]),
-    goal:S["Goal"]||"Strong B1",
-    totalLessons:num(S["Total lessons planned"])||12,
-    wordsGoal:num(S["Words goal"])||150,
-    target:num(S["Target skill rating (1-5)"])||4
+    name:(S["Student name"]||"").trim(), testDate:parseDate(S["Test date"]), goal:S["Goal"]||"Strong B1",
+    totalLessons:num(S["Total lessons planned"])||12, wordsGoal:num(S["Words goal"])||150, target:num(S["Target skill rating (1-5)"])||4
   };
   const lessons=(data.Lessons||[]).filter(r=>r["Date"]||r["Topic (what you actually did)"]||r.Status);
   const done=lessons.filter(r=>/^done$/i.test(r.Status));
@@ -279,28 +297,27 @@ function compute(data){
     if(tot===null){ const v=["Grammar %","Vocabulary %","Speaking %"].map(k=>num(r[k])).filter(x=>x!==null); if(v.length) tot=v.reduce((a,b)=>a+b,0)/v.length; }
     return {...r,total:tot};
   });
-  const sheetHw=new Set((data.Submissions||[]).map(r=>r.Homework));
-  const hwIds=[...new Set([...sheetHw,...localDone()])];
+  const homeworks=buildHomeworks(data);
   const parts=[];
   SKILLS.forEach(([col])=>{ if(latest[col]!==undefined) parts.push(Math.min(1,latest[col]/cfg.target)); });
   parts.push(Math.min(1,learned.length/cfg.wordsGoal));
   const overall=Math.round(parts.reduce((a,b)=>a+b,0)/parts.length*100);
-  return {cfg,lessons,done,latest,words,learned,mistakes,open,mocks,hwIds,overall};
+  const speaking=(data["Speaking questions"]||[]).filter(r=>r.Question);
+  return {cfg,lessons,done,latest,words,learned,mistakes,open,mocks,homeworks,speaking,overall};
 }
+function hwDoneCount(){ return STATE.homeworks.filter(h=>resultFor(h.id)).length; }
 
-/* ================= render ================= */
-function render(){
+/* ================= render: top ================= */
+function renderTop(){
   const s=STATE, c=s.cfg;
   $("title").textContent=(c.name&&c.name!=="Student"?c.name+"'s":"Your")+" English progress";
   $("subtitle").textContent="Goal: "+c.goal+(c.testDate?" · test on "+c.testDate.toLocaleDateString("en-GB",{day:"numeric",month:"long"}):"");
   $("goal").textContent=c.goal;
-  if(c.testDate){ const t=new Date(); t.setHours(0,0,0,0); $("days").textContent=Math.max(0,Math.round((c.testDate-t)/86400000)); }
-  else $("days").textContent="–";
-  $("overallBar").style.width=s.overall+"%";
-  $("overallPct").textContent=s.overall+"%";
+  if(c.testDate){ const t=new Date(); t.setHours(0,0,0,0); $("days").textContent=Math.max(0,Math.round((c.testDate-t)/86400000)); } else $("days").textContent="–";
+  $("overallBar").style.width=s.overall+"%"; $("overallPct").textContent=s.overall+"%";
   $("lessonsDone").textContent=s.done.length+" / "+c.totalLessons;
   $("wordsLearned").textContent=s.learned.length+" / "+c.wordsGoal;
-  $("hwDone").textContent=s.hwIds.length;
+  $("hwDone").textContent=hwDoneCount();
   $("mistakesOpen").textContent=s.open.length;
   $("updated").textContent="Updated "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
   $("banner").innerHTML="";
@@ -309,31 +326,29 @@ function render(){
     return `<div class="row"><span>${label}</span><small>${v===undefined?"not rated yet":v+" / 5 (target "+c.target+")"}</small></div>
     <div class="bar"><i style="width:${pct}%"></i><span class="marker" style="left:${mark}%"></span></div>`;
   }).join("");
-  renderPanel();
 }
 
+/* ================= render: panel ================= */
+function setMode(m){ $("panel").dataset.mode=m; }
 function renderPanel(){
-  const s=STATE, p=$("panel"); let h="";
-  if(ACTIVE==="homework"){
-    if(p.dataset.mode==="hwform") return;   // do not wipe typed answers on refresh
-    renderHomeworkList(); return;
-  }
-  p.dataset.mode="";
+  const s=STATE, p=$("panel"), mode=p.dataset.mode||"";
+  if(ACTIVE==="homework"){ if(mode==="hwform"||mode==="hwresult") return; renderHomeworkList(); return; }
+  if(ACTIVE==="words"){ if(mode==="deck") return; renderFolders(); return; }
+  setMode(""); let h="";
   if(ACTIVE==="lessons"){
     if(!s.lessons.length) h='<div class="empty">No lessons logged yet.</div>';
     else h=`<div class="scroll"><table><tr><th>#</th><th>Date</th><th>Topic</th><th>Grammar</th><th>Homework</th><th>Status</th></tr>`+
       s.lessons.map(r=>`<tr><td>${esc(r["#"])}</td><td>${esc(fmtDate(parseDate(r.Date)))}</td><td>${esc(r["Topic (what you actually did)"]||r["Draft plan (suggestion, ignore freely)"]||"")}</td><td>${esc(r.Grammar)}</td><td>${esc(r["Homework given"])}</td><td>${r.Status?`<span class="pill ${/done/i.test(r.Status)?"":"warn"}">${esc(r.Status)}</span>`:""}</td></tr>`).join("")+`</table></div>`;
-  } else if(ACTIVE==="words"){
-    if(!s.words.length) h='<div class="empty">No words yet.</div>';
-    else h=`<div class="scroll"><table><tr><th>Word</th><th>Meaning</th><th>Example</th><th>Status</th></tr>`+
-      s.words.map(r=>{const L=isYes(r["Learned? (yes/no)"]);
-        return `<tr><td><b>${esc(r["Word / phrase"])}</b></td><td>${esc(r["Meaning / translation"])}</td><td>${esc(r["Example sentence"])}</td><td>${L?'<span class="pill">learned</span>':'<span class="pill warn">to learn</span>'}</td></tr>`}).join("")+`</table></div>`;
+  } else if(ACTIVE==="speaking"){
+    if(!s.speaking.length) h='<div class="empty">No speaking questions yet.</div>';
+    else h=`<p class="hint" style="margin:0 0 10px">Questions to prepare for the interview. Practise answering them out loud.</p><div class="qlist">`+
+      s.speaking.map((r,i)=>`<div class="qrow"><span class="n">${i+1}.</span><div><div>${esc(r.Question)}</div><div class="hint">${esc(r.Topic)}</div></div></div>`).join("")+`</div>`;
   } else if(ACTIVE==="mistakes"){
     if(!s.mistakes.length) h='<div class="empty">No mistakes logged yet. After each lesson, the recurring ones will appear here.</div>';
     else h=`<div class="scroll"><table><tr><th>Date</th><th>He said</th><th>Correct</th><th>Status</th></tr>`+
       s.mistakes.map(r=>{const f=/fixed/i.test(r.Status);
         return `<tr><td>${esc(fmtDate(parseDate(r.Date)))}</td><td>${esc(r["Mistake (what he said)"])}</td><td class="good">${esc(r["Correct version"])}</td><td><span class="pill ${f?"":"warn"}">${f?"fixed":"still happening"}</span></td></tr>`}).join("")+`</table></div>`;
-  } else {
+  } else if(ACTIVE==="mock"){
     const pts=s.mocks.filter(m=>m.total!==null);
     if(!pts.length) h='<div class="empty">No mock tests yet. The first one will be around lesson 9.</div>';
     else {
@@ -354,122 +369,162 @@ function renderPanel(){
   p.innerHTML=h;
 }
 
+/* ================= word cards ================= */
+let DECK={list:[],i:0,on:false};
+function lessonGroups(){
+  const g={};
+  STATE.words.forEach(w=>{ const k=(w["Lesson #"]||"").trim()||"0"; (g[k]=g[k]||[]).push(w); });
+  return Object.keys(g).sort((a,b)=>num(a)-num(b)).map(k=>({key:k,words:g[k]}));
+}
+function lessonTitle(k){
+  const l=STATE.lessons.find(r=>String(r["#"]).trim()===k);
+  return l&&l["Topic (what you actually did)"]?l["Topic (what you actually did)"]:"";
+}
+function renderFolders(){
+  const p=$("panel"); setMode("folders");
+  const groups=lessonGroups();
+  if(!groups.length){ p.innerHTML='<div class="empty">No words yet. They will appear here after each lesson.</div>'; return; }
+  p.innerHTML='<p class="hint" style="margin:0 0 12px">Open a lesson, tap a card to flip it.</p><div class="folders">'+groups.map(g=>{
+    const n=g.words.length, L=g.words.filter(w=>isYes(w["Learned? (yes/no)"])).length;
+    const name=g.key==="0"?"Other words":"Lesson "+g.key;
+    return `<button class="folder" type="button" data-k="${esc(g.key)}"><b>📁 ${esc(name)}</b><div class="hint">${esc(lessonTitle(g.key))}</div><div class="hint">${n} words · ${L} learned</div><div class="bar"><i style="width:${n?L/n*100:0}%"></i></div></button>`;
+  }).join("")+'</div>';
+  p.querySelectorAll(".folder").forEach(b=>b.addEventListener("click",()=>openDeck(b.dataset.k)));
+}
+function openDeck(k){
+  const g=lessonGroups().find(x=>x.key===k); if(!g) return;
+  DECK={list:g.words.slice(),i:0,on:false,key:k}; setMode("deck"); renderDeck();
+}
+function renderDeck(){
+  const p=$("panel"), w=DECK.list[DECK.i]; if(!w) return;
+  const L=isYes(w["Learned? (yes/no)"]);
+  p.innerHTML=`<div class="deckbar"><button class="btn ghost small" id="dback" type="button">← Lessons</button>
+    <b>${DECK.key==="0"?"Other words":"Lesson "+esc(DECK.key)}</b><span class="hint">${DECK.i+1} / ${DECK.list.length}</span></div>
+  <div class="stage"><div class="flip ${DECK.on?"on":""}" id="flip" role="button" tabindex="0" aria-label="Word card. Press to flip.">
+    <div class="face front"><div class="w">${esc(w["Word / phrase"])}</div><div class="tap">tap to flip</div></div>
+    <div class="face back"><div class="m">${esc(w["Meaning / translation"])}</div><div class="e">${esc(w["Example sentence"])}</div>
+      <div style="margin-top:12px"><span class="pill ${L?"":"warn"}">${L?"learned":"to learn"}</span></div><div class="tap">tap to flip back</div></div>
+  </div></div>
+  <div class="controls"><button class="btn ghost" id="prev" type="button">← Previous</button><button class="btn" id="flipb" type="button">Flip</button><button class="btn ghost" id="next" type="button">Next →</button><button class="btn ghost" id="shuf" type="button">Shuffle</button></div>`;
+  $("dback").addEventListener("click",()=>{setMode("");renderFolders();});
+  $("flip").addEventListener("click",()=>flipCard()); $("flipb").addEventListener("click",()=>flipCard());
+  $("prev").addEventListener("click",()=>stepDeck(-1)); $("next").addEventListener("click",()=>stepDeck(1));
+  $("shuf").addEventListener("click",()=>{ for(let i=DECK.list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[DECK.list[i],DECK.list[j]]=[DECK.list[j],DECK.list[i]];} DECK.i=0;DECK.on=false;renderDeck(); });
+}
+function flipCard(){ DECK.on=!DECK.on; const f=$("flip"); if(f) f.classList.toggle("on",DECK.on); }
+function stepDeck(d){ DECK.i=(DECK.i+d+DECK.list.length)%DECK.list.length; DECK.on=false; renderDeck(); }
+document.addEventListener("keydown",e=>{
+  if($("panel").dataset.mode!=="deck"||/INPUT|TEXTAREA/.test((document.activeElement||{}).tagName||"")) return;
+  if(e.key==="ArrowRight") stepDeck(1); else if(e.key==="ArrowLeft") stepDeck(-1);
+  else if(e.key===" "||e.key==="Enter"){ e.preventDefault(); flipCard(); }
+});
+
 /* ================= homework ================= */
 function renderHomeworkList(){
-  const p=$("panel"); p.dataset.mode="hwlist";
-  const sheetDone=new Set((STATE.hwIds||[]));
-  p.innerHTML='<div class="hwlist">'+HOMEWORK.map(h=>{
-    const done=sheetDone.has(h.id)||!!store.get("hw_"+h.id);
-    return `<div class="hwitem"><div><b>${esc(h.title)}</b><div class="hint">3 parts: choose the answer, fill the gap, write a short text</div></div>
-      <button class="btn ${done?"ghost":""}" data-open="${h.id}" type="button">${done?"View result":"Start"}</button></div>`;
+  const p=$("panel"); setMode("hwlist");
+  if(!STATE.homeworks.length){ p.innerHTML='<div class="empty">No homework yet. It will appear here after the lesson.</div>'; return; }
+  p.innerHTML='<div class="list">'+STATE.homeworks.map(h=>{
+    const done=!!resultFor(h.id);
+    return `<div class="item"><div class="t"><b>${esc(h.title)}</b><div class="hint">${done?"Finished":"Not done yet"} · 3 parts: choose the answer, fill the gap, write a short text</div></div>
+      <button class="btn small ${done?"ghost":""}" data-open="${esc(h.id)}" type="button">${done?"View result":"Start"}</button></div>`;
   }).join("")+'</div>';
   p.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>openHomework(b.dataset.open)));
 }
-
-function norm(s){ return String(s||"").toLowerCase().replace(/[’`]/g,"'").replace(/\s+/g," ").trim(); }
-function countWords(t){ const m=String(t||"").trim().match(/\S+/g); return m?m.length:0; }
-function wordsUsedIn(text){ const t=norm(text); return WORDBANK.filter(w=>t.includes(w)); }
+function wordsUsedIn(text,bank){ const t=norm(text); return (bank||[]).filter(w=>t.includes(norm(w))); }
+function wireBack(){ const b=$("back"); if(b) b.addEventListener("click",()=>{setMode("");renderPanel();}); }
 
 function openHomework(id){
-  const hw=HOMEWORK.find(x=>x.id===id); const p=$("panel");
-  const saved=store.get("hw_"+id);
-  if(saved){ p.dataset.mode="hwresult"; p.innerHTML=resultHTML(hw,JSON.parse(saved),true); wireBack(); return; }
-  p.dataset.mode="hwform";
-  let h=`<div class="hw"><button class="btn ghost" type="button" id="back" style="margin-bottom:10px">← Back</button>
-  <h2 style="font-size:1.2rem;margin:4px 0">${esc(hw.title)}</h2><p class="intro">${esc(hw.intro)}</p>
-  <h3>Part 1. Choose the correct answer</h3><p class="intro">Present simple or present continuous?</p>`;
-  hw.ex1.forEach((q,i)=>{
-    h+=`<div class="q"><p><b>${i+1}.</b> ${esc(q.q)}</p>`+q.opts.map((o,j)=>`<label class="opt"><input type="radio" name="e1_${i}" value="${j}"> ${esc(o)}</label>`).join("")+`</div>`;
-  });
-  h+=`<h3>Part 2. Fill in the gap</h3><p class="intro">Use words from the text and the grammar from the lesson. The hint shows the first letter or the tense.</p>`;
-  hw.ex2.forEach((q,i)=>{
-    h+=`<div class="q"><div class="gap"><b>${i+1}.</b> <span>${esc(q.pre)}</span><input type="text" id="e2_${i}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Gap ${i+1}"><span>${esc(q.post)}</span></div><div class="hint">Hint: ${esc(q.hint)}</div></div>`;
-  });
-  h+=`<h3>Part 3. Write</h3><p class="intro">${esc(hw.ex3.prompt)}</p>
-  <div class="wb" id="wb">${WORDBANK.map(w=>`<span data-w="${esc(w)}">${esc(w)}</span>`).join("")}</div>
-  <textarea id="e3" placeholder="Write here…"></textarea>
-  <div class="hint" id="wc">0 words · 0 words from the bank used</div>
-  <div class="err" id="err" role="alert"></div>
-  <div style="margin-top:14px"><button class="btn" id="submit" type="button">Submit homework</button></div></div>`;
+  const hw=STATE.homeworks.find(x=>x.id===id); const p=$("panel"); if(!hw) return;
+  const res=resultFor(id);
+  if(res){ setMode("hwresult"); p.innerHTML=resultHTML(hw,res); wireBack(); return; }
+  setMode("hwform");
+  let h=`<div class="hw"><button class="btn ghost small" type="button" id="back" style="margin-bottom:10px">← Back</button>
+  <h2 style="font-size:1.2rem;margin:4px 0">${esc(hw.title)}</h2><p class="intro">${esc(hw.intro)}</p>`;
+  if(hw.ex1.length){
+    h+=`<h3>Part 1. Choose the correct answer</h3>`;
+    hw.ex1.forEach((q,i)=>{ h+=`<div class="q"><p><b>${i+1}.</b> ${esc(q.q)}</p>`+q.opts.map((o,j)=>`<label class="opt"><input type="radio" name="e1_${i}" value="${j}"> ${esc(o)}</label>`).join("")+`</div>`; });
+  }
+  if(hw.ex2.length){
+    h+=`<h3>Part 2. Fill in the gap</h3><p class="intro">Write one answer in each gap. The hint helps you.</p>`;
+    hw.ex2.forEach((q,i)=>{ h+=`<div class="q"><div class="gap"><b>${i+1}.</b> <span>${esc(q.pre)}</span><input type="text" id="e2_${i}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Gap ${i+1}"><span>${esc(q.post)}</span></div><div class="hint">Hint: ${esc(q.hint)}</div></div>`; });
+  }
+  if(hw.ex3){
+    h+=`<h3>Part 3. Write</h3><p><b>${esc(hw.ex3.q)}</b></p><p class="intro">${esc(hw.ex3.instr)}</p>
+    <div class="wb" id="wb">${hw.ex3.bank.map(w=>`<span data-w="${esc(w)}">${esc(w)}</span>`).join("")}</div>
+    <textarea id="e3" placeholder="Write here…"></textarea><div class="hint" id="wc">0 words · 0 expressions from the box used</div>`;
+  }
+  h+=`<div class="err" id="err" role="alert"></div><div style="margin-top:14px"><button class="btn" id="submit" type="button">Submit homework</button></div></div>`;
   p.innerHTML=h; wireBack();
   const ta=$("e3");
-  ta.addEventListener("input",()=>{
-    const used=wordsUsedIn(ta.value);
-    $("wc").textContent=countWords(ta.value)+" words · "+used.length+" words from the bank used";
+  if(ta) ta.addEventListener("input",()=>{
+    const used=wordsUsedIn(ta.value,hw.ex3.bank);
+    $("wc").textContent=countWords(ta.value)+" words · "+used.length+" expressions from the box used";
     document.querySelectorAll("#wb span").forEach(sp=>sp.classList.toggle("used",used.includes(sp.dataset.w)));
   });
   $("submit").addEventListener("click",()=>submitHomework(hw));
 }
-function wireBack(){ const b=$("back"); if(b) b.addEventListener("click",()=>{$("panel").dataset.mode="";renderPanel();}); }
 
 function submitHomework(hw){
   const err=$("err"); err.textContent="";
   const a1=hw.ex1.map((q,i)=>{const r=document.querySelector(`input[name="e1_${i}"]:checked`);return r?+r.value:null;});
   if(a1.some(v=>v===null)){ err.textContent="Please answer all the questions in Part 1."; return; }
-  const text=$("e3").value;
-  if(countWords(text)<hw.ex3.minWords){ err.textContent=`Part 3: please write at least ${hw.ex3.minWords} words (you have ${countWords(text)}).`; return; }
-  const a2=hw.ex2.map((q,i)=>$("e2_"+i).value.trim());
-  const s1=a1.filter((v,i)=>v===hw.ex1[i].a).length;
-  const ok2=a2.map((v,i)=>hw.ex2[i].ans.map(norm).includes(norm(v)));
-  const s2=ok2.filter(Boolean).length;
-  const used=wordsUsedIn(text);
-  const res={id:hw.id,lesson:hw.lesson,a1,a2,ok2,s1,t1:hw.ex1.length,s2,t2:hw.ex2.length,text,used,ts:new Date().toISOString(),sent:null};
+  const text=hw.ex3?$("e3").value:"";
+  if(hw.ex3&&countWords(text)<hw.ex3.minWords){ err.textContent=`Part 3: please write at least ${hw.ex3.minWords} words (you have ${countWords(text)}).`; return; }
+  const details=[];
+  hw.ex1.forEach((q,i)=>{ const ok=a1[i]===q.a; details.push({part:"1",n:i+1,question:q.q,his:q.opts[a1[i]],correct:q.opts[q.a],ok,why:ok?"":q.why[a1[i]],rule:q.why[q.a]}); });
+  hw.ex2.forEach((q,i)=>{ const v=$("e2_"+i).value.trim(); const ok=q.ans.map(norm).includes(norm(v)); details.push({part:"2",n:i+1,question:q.pre+"___"+q.post,his:v||"(empty)",correct:q.ans[0],ok,why:"",rule:""}); });
+  const used=hw.ex3?wordsUsedIn(text,hw.ex3.bank):[];
+  const res={id:hw.id,details,text,used:used.length+": "+used.join(", "),from:"local",sent:null};
   const btn=$("submit"); btn.disabled=true; btn.textContent="Sending…";
   sendToSheet(hw,res).then(sent=>{
     res.sent=sent; store.set("hw_"+hw.id,JSON.stringify(res));
-    const raw=STATE.raw; STATE=compute(raw); STATE.raw=raw; render0();
-    $("panel").dataset.mode="hwresult"; $("panel").innerHTML=resultHTML(hw,res,false); wireBack();
+    setMode("hwresult"); $("panel").innerHTML=resultHTML(hw,res); wireBack(); renderTop();
     window.scrollTo({top:$("panel").offsetTop-10,behavior:"smooth"});
   });
 }
-
-function readable1(hw,res){ return hw.ex1.map((q,i)=>{const ok=res.a1[i]===q.a; return `${i+1}) ${q.opts[res.a1[i]]} ${ok?"OK":"WRONG -> "+q.opts[q.a]}`;}).join("; "); }
-function readable2(hw,res){ return hw.ex2.map((q,i)=>`${i+1}) ${res.a2[i]||"(empty)"} ${res.ok2[i]?"OK":"WRONG -> "+q.ans[0]}`).join("; "); }
-
+const score=(d,part)=>{const x=d.filter(r=>r.part===part);return [x.filter(r=>r.ok).length,x.length];};
 async function sendToSheet(hw,res){
   if(!SCRIPT_URL) return false;
-  const payload={homework:hw.id,lesson:hw.lesson,part1:`${res.s1}/${res.t1}`,part2:`${res.s2}/${res.t2}`,wordsUsed:res.used.length+": "+res.used.join(", "),writing:res.text,answers1:readable1(hw,res),answers2:readable2(hw,res)};
-  try{
-    await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
-    return true;
-  }catch(e){ return false; }
+  const [s1,t1]=score(res.details,"1"),[s2,t2]=score(res.details,"2");
+  const payload={homework:hw.id,lesson:hw.lesson,part1:`${s1} of ${t1}`,part2:`${s2} of ${t2}`,wordsUsed:res.used,writing:res.text,answers1:"see Answers tab",answers2:"see Answers tab",details:res.details};
+  try{ await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)}); return true; }
+  catch(e){ return false; }
 }
-
-function resultHTML(hw,res,again){
-  let h=`<div class="hw"><button class="btn ghost" type="button" id="back" style="margin-bottom:10px">← Back</button>
-  <div class="result"><b>${esc(hw.title)}</b><br>Part 1: <b>${res.s1} / ${res.t1}</b> · Part 2: <b>${res.s2} / ${res.t2}</b> · Writing: <b>${countWords(res.text)} words</b>, ${res.used.length} words from the bank used.<br>
-  <span class="hint">${res.sent?"Sent to your teacher.":"Checked on this device. Saving to the teacher's sheet is not connected yet, so show this screen or send a screenshot."}</span></div>
-  <h3>Part 1: why each answer is right or wrong</h3>`;
-  hw.ex1.forEach((q,i)=>{
-    const ok=res.a1[i]===q.a;
-    h+=`<div class="q"><p><b>${i+1}.</b> ${esc(q.q)}</p><div class="fb ${ok?"ok":"no"}">${ok
-      ? "✓ <b>"+esc(q.opts[q.a])+"</b>. "+esc(q.why[q.a])
-      : "✗ You chose <b>"+esc(q.opts[res.a1[i]])+"</b>: "+esc(q.why[res.a1[i]])+"<br>✓ Correct: <b>"+esc(q.opts[q.a])+"</b>. "+esc(q.why[q.a])}</div></div>`;
-  });
-  h+=`<h3>Part 2: gaps</h3>`;
-  hw.ex2.forEach((q,i)=>{
-    const ok=res.ok2[i];
-    h+=`<div class="q"><p><b>${i+1}.</b> ${esc(q.pre)}<b>${esc(res.a2[i]||"…")}</b>${esc(q.post)}</p><div class="fb ${ok?"ok":"no"}">${ok?"✓ Correct.":"✗ Correct answer: <b>"+esc(q.ans[0])+"</b>"}</div></div>`;
-  });
+function resultHTML(hw,res){
+  const d=res.details||[];
+  const [s1,t1]=score(d,"1"),[s2,t2]=score(d,"2");
+  let h=`<div class="hw"><button class="btn ghost small" type="button" id="back" style="margin-bottom:10px">← Back</button>
+  <div class="result"><b>${esc(hw.title)}</b><br>`;
+  if(d.length) h+=`Part 1: <b>${s1} / ${t1}</b> · Part 2: <b>${s2} / ${t2}</b> · Writing: <b>${countWords(res.text)} words</b>`;
+  else h+=`Part 1: <b>${esc((res.scoreText||[])[0]||"")}</b> · Part 2: <b>${esc((res.scoreText||[])[1]||"")}</b> · Writing: <b>${countWords(res.text)} words</b>`;
+  if(res.from==="local") h+=`<br><span class="hint">${res.sent?"Sent to your teacher.":"Checked on this device. Saving to the teacher's sheet is not connected yet."}</span>`;
+  h+=`</div>`;
+  const p1=d.filter(r=>r.part==="1"), p2=d.filter(r=>r.part==="2");
+  if(p1.length){
+    h+=`<h3>Part 1: why each answer is right or wrong</h3>`;
+    p1.forEach(r=>{ h+=`<div class="q"><p><b>${r.n}.</b> ${esc(r.question)}</p><div class="fb ${r.ok?"ok":"no"}">${r.ok
+      ?"✓ <b>"+esc(r.his)+"</b>. "+esc(r.rule)
+      :"✗ You chose <b>"+esc(r.his)+"</b>: "+esc(r.why)+"<br>✓ Correct: <b>"+esc(r.correct)+"</b>. "+esc(r.rule)}</div></div>`; });
+  }
+  if(p2.length){
+    h+=`<h3>Part 2: gaps</h3>`;
+    p2.forEach(r=>{ h+=`<div class="q"><p><b>${r.n}.</b> ${esc(r.question).replace("___","<b>"+esc(r.his)+"</b>")}</p><div class="fb ${r.ok?"ok":"no"}">${r.ok?"✓ Correct.":"✗ Correct answer: <b>"+esc(r.correct)+"</b>"}</div></div>`; });
+  }
   h+=`<h3>Part 3: your text</h3><div class="q"><p style="white-space:pre-wrap">${esc(res.text)}</p><div class="hint">Your teacher will give feedback on this part in the next lesson.</div></div></div>`;
   return h;
 }
 
 /* ================= wiring ================= */
 document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{
-  ACTIVE=b.dataset.tab; $("panel").dataset.mode="";
+  ACTIVE=b.dataset.tab; setMode("");
   document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
   renderPanel();
 }));
-function render0(){ // re-render only the header/stat area
-  const keep=$("panel").innerHTML, mode=$("panel").dataset.mode;
-  render(); if(mode){ $("panel").innerHTML=keep; $("panel").dataset.mode=mode; }
-}
 async function init(){
   $("subtitle").textContent="Loading…";
   try{
     const data=await loadAll();
-    STATE=compute(data); STATE.raw=data; render();
+    STATE=compute(data); STATE.raw=data; renderTop(); renderPanel();
   }catch(e){
     $("subtitle").textContent="Could not load the sheet";
     $("banner").innerHTML='<div class="banner"><b>Could not load data.</b> Check that the Google Sheet is shared as "Anyone with the link can view", that the sheet ID is correct, and that the tab names have not been changed.<br><small>'+esc(e.message)+'</small></div>';
