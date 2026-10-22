@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>English Progress Tracker</title>
+<style>
+:root{
+  --bg:#f6f4ee; --card:#ffffff; --ink:#1f2a27; --muted:#6b7773; --line:#e4e0d4;
+  --accent:#2f5d50; --accent-soft:#dcebe5; --warn:#c8742b; --warn-soft:#f8e8d6; --ok:#2f7d4f; --bad:#b3382c; --bad-soft:#f6dfdb;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#141a18; --card:#1d2523; --ink:#eef1ee; --muted:#9aa7a2; --line:#2c3633;
+    --accent:#6fbf9f; --accent-soft:#25382f; --warn:#e39a55; --warn-soft:#3a2d1f; --ok:#6fcf93; --bad:#ee8a7e; --bad-soft:#3d2623; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+h1{margin:0;font-size:1.6rem;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:.95rem}
+.count{background:var(--accent);color:#fff;border-radius:16px;padding:14px 20px;text-align:center;min-width:150px}
+.count b{display:block;font-size:2.2rem;line-height:1.1}
+.count span{font-size:.85rem;opacity:.9}
+@media (prefers-color-scheme: dark){ .count{color:#10201a} }
+.banner{background:var(--warn-soft);border:1px solid var(--warn);color:var(--ink);border-radius:12px;padding:10px 14px;margin-bottom:16px;font-size:.92rem}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.card h2{margin:0 0 10px;font-size:1rem}
+.stat b{font-size:1.9rem;display:block;line-height:1.15}
+.stat span{color:var(--muted);font-size:.88rem}
+.bar{height:12px;background:var(--accent-soft);border-radius:99px;position:relative;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .6s}
+.big .bar{height:18px}
+.marker{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
+.row{display:flex;justify-content:space-between;gap:10px;font-size:.92rem;margin:12px 0 5px}
+.row small{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th{text-align:left;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.8rem;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.scroll{overflow-x:auto}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 10px}
+.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:99px;font:inherit;font-size:.92rem;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+@media (prefers-color-scheme: dark){ .tabs button[aria-selected="true"]{color:#10201a} }
+.empty{color:var(--muted);padding:10px 0}
+.top{display:flex;gap:8px;align-items:center}
+.top button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:6px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.chart{width:100%;height:180px}
+.good{color:var(--ok)}
+
+/* homework */
+.hw h3{margin:22px 0 4px;font-size:1.05rem}
+.hw h3:first-of-type{margin-top:6px}
+.hw .intro{color:var(--muted);font-size:.92rem;margin:0 0 12px}
+.q{padding:12px 0;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0}
+.q p{margin:0 0 8px}
+.opt{display:flex;align-items:center;gap:8px;padding:6px 10px;margin:4px 0;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.opt input{accent-color:var(--accent)}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+input[type=text],textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+input[type=text]{max-width:260px;display:inline-block}
+textarea{min-height:150px;resize:vertical}
+.gap{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.hint{color:var(--muted);font-size:.85rem}
+.btn{border:0;background:var(--accent);color:#fff;font:inherit;font-weight:600;border-radius:12px;padding:12px 20px;cursor:pointer}
+@media (prefers-color-scheme: dark){ .btn{color:#10201a} }
+.btn[disabled]{opacity:.5;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.wb{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+.wb span{background:var(--accent-soft);color:var(--accent);border-radius:99px;padding:2px 10px;font-size:.85rem}
+.wb span.used{background:var(--accent);color:#fff}
+@media (prefers-color-scheme: dark){ .wb span.used{color:#10201a} }
+.fb{margin-top:8px;padding:8px 12px;border-radius:10px;font-size:.9rem}
+.fb.ok{background:var(--accent-soft)}
+.fb.no{background:var(--bad-soft)}
+.err{color:var(--bad);margin:10px 0 0;font-size:.92rem}
+.result{background:var(--accent-soft);border-radius:12px;padding:12px 16px;margin-bottom:12px}
+.hwlist{display:grid;gap:10px}
+.hwitem{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<script>
+/* ============ SETTINGS: edit these two lines once ============
+   SHEET_ID   = the long ID from your Google Sheet link (between /d/ and /edit)
+   SCRIPT_URL = the web app link from the Apps Script step (lets homework answers save to your sheet)
+   Leave both empty to preview the page. */
+const SHEET_ID = "";
+const SCRIPT_URL = "";
+/* =============================================================== */
+</script>
+
+<header>
+  <div>
+    <h1 id="title">Your English progress</h1>
+    <div class="sub" id="subtitle">Loading…</div>
+    <div class="top" style="margin-top:8px"><button id="refresh" type="button">Refresh</button><span class="sub" id="updated"></span></div>
+  </div>
+  <div class="count"><b id="days">–</b><span>days to the test</span></div>
+</header>
+
+<div id="banner"></div>
+
+<div class="card big" style="margin-bottom:14px">
+  <h2>Overall progress to goal: <span id="goal">Strong B1</span></h2>
+  <div class="bar"><i id="overallBar" style="width:0"></i><span class="marker" style="left:100%;margin-left:-2px"></span></div>
+  <div class="row"><small id="overallNote">Based on skill ratings and words learned</small><b id="overallPct">0%</b></div>
+</div>
+
+<div class="grid">
+  <div class="card stat"><b id="lessonsDone">0</b><span>lessons done</span></div>
+  <div class="card stat"><b id="wordsLearned">0</b><span>words learned</span></div>
+  <div class="card stat"><b id="hwDone">0</b><span>homework finished</span></div>
+  <div class="card stat"><b id="mistakesOpen">0</b><span>mistakes still happening</span></div>
+</div>
+
+<div class="card" style="margin-bottom:14px">
+  <h2>Skills (latest lesson rating, orange marker = target)</h2>
+  <div id="skills"></div>
+</div>
+
+<div class="tabs" role="tablist">
+  <button role="tab" aria-selected="true" data-tab="lessons">Lessons</button>
+  <button role="tab" aria-selected="false" data-tab="homework">Homework</button>
+  <button role="tab" aria-selected="false" data-tab="words">Word bank</button>
+  <button role="tab" aria-selected="false" data-tab="mistakes">Mistakes</button>
+  <button role="tab" aria-selected="false" data-tab="mock">Mock tests</button>
+</div>
+
+<div class="card" id="panel"></div>
+
+</div>
+
+<script>
+/* ================= HOMEWORK CONTENT (add new homework here) ================= */
+const WORDBANK = ["cope with","avoid","affect","flexible","manage to","occur","in advance","unstable","stay up late","switch off","behave","balance"];
+const HOMEWORK = [
+{
+  id:"HW1", lesson:1,
+  title:"Homework 1: Routines (present simple and present continuous)",
+  intro:"Based on the text from lesson 1. Do all three parts, then press Submit. You will see your score and why each answer is right or wrong.",
+  ex1:[
+    {q:"Anna ___ up at 7:00 every morning.", opts:["wakes","is waking","wake"], a:0,
+     why:["Every morning is a habit, so we use present simple. With she, the verb needs -s.","Is waking is for something happening right now, not a repeated habit.","With she/he/it the verb needs -s (wakes)."]},
+    {q:"Right now I ___ my homework.", opts:["do","am doing","does"], a:1,
+     why:["Do is for habits. Right now means it is happening at this moment.","Right now means in progress, so use present continuous: am + verb-ing.","Does goes with he/she/it, and it is the habit form."]},
+    {q:"She never ___ her phone at breakfast.", opts:["is checking","checks","check"], a:1,
+     why:["Never shows a habit, so present simple is needed, not continuous.","A habit word (never) + she gives checks.","With she the verb needs -s (checks)."]},
+    {q:"This week she ___ from her parents' house.", opts:["works","is working","work"], a:1,
+     why:["Works is for a permanent habit. This week is temporary and different from normal.","A temporary situation around now takes present continuous.","Work is missing -s, and it is not the right tense for a temporary situation."]},
+    {q:"Listen! Someone ___ at the door.", opts:["knocks","is knocking","knock"], a:1,
+     why:["Knocks describes a habit. Listen! means it is happening now.","Happening at this moment, so present continuous.","Knock is missing -s, and the tense is wrong for something happening now."]},
+    {q:"___ you drink a lot of coffee?", opts:["Are","Do","Does"], a:1,
+     why:["Are goes with -ing (Are you drinking?). A question about a habit uses do.","Do + you + base verb is the present simple question form.","Does is only for he/she/it."]},
+    {q:"He ___ like coffee in the evening.", opts:["doesn't","isn't","don't"], a:0,
+     why:["With he, the negative is doesn't + base verb.","Isn't needs a verb-ing after it, and it is a habit here.","Don't is for I/you/we/they, not for he."]},
+    {q:"I ___ for a better work-life balance these days.", opts:["look","am looking","looks"], a:1,
+     why:["These days is a temporary period around now, and look sounds like a permanent habit.","These days (temporary, around now) takes present continuous.","Looks is for he/she/it, not for I."]}
+  ],
+  ex2:[
+    {pre:"Many people use a routine to ", post:" with stress.", ans:["cope"], hint:"c…  (a way to deal with a problem)"},
+    {pre:"She tries to ", post:" her phone during breakfast.", ans:["avoid"], hint:"a…  (not do something)"},
+    {pre:"Lack of sleep ", post:" my mood.", ans:["affects"], hint:"a…  (he/she/it form)"},
+    {pre:"My schedule is very ", post:". I can change it easily.", ans:["flexible"], hint:"f…"},
+    {pre:"Problems sometimes ", post:" when the power goes out.", ans:["occur"], hint:"o…  (happen)"},
+    {pre:"She charges her devices ", post:" advance.", ans:["in"], hint:"2 letters, means before it is needed"},
+    {pre:"At 7 p.m. I ", post:" off my laptop.", ans:["switch"], hint:"s…"},
+    {pre:"My internet is ", post:" today, so I work from a café.", ans:["unstable"], hint:"u…  (not working well all the time)"},
+    {pre:"Right now Anna ", post:" (work) from a café.", ans:["is working","'s working"], hint:"present continuous"},
+    {pre:"She ", post:" (not drink) coffee in the evening.", ans:["doesn't drink","does not drink"], hint:"present simple, negative"}
+  ],
+  ex3:{
+    prompt:"Write 6 to 8 sentences about your own routine. What do you usually do on a normal day? What is different for you this week or in these days (work, war, life)? Use at least 4 words from the word bank.",
+    minWords:40
+  }
+}
+];
+
+/* ================= STARTER DATA (day 1, before the sheet is connected) ================= */
+function starterData(){
+  const words=["cope with|справлятися з|Many people cope with stress by keeping a routine.","avoid|уникати|She tries to avoid her phone at breakfast.","affect|впливати|Sleep affects my mood.","flexible|гнучкий|My schedule is flexible.","manage to|вдаватися, встигати|I usually manage to finish before lunch.","occur|траплятися|Problems sometimes occur.","in advance|заздалегідь|She charges her devices in advance.","unstable|нестабільний|My internet is unstable today.","stay up late|лягати пізно|He often stays up late.","switch off|вимикати|I switch off my laptop at 7 p.m.","behave|поводитися|I can decide how I behave.","balance|баланс|I'm looking for a better work-life balance."];
+  return {
+    Settings:[{Setting:"Student name",Value:""},{Setting:"Test date",Value:"2026-11-15"},{Setting:"Goal",Value:"Strong B1"},{Setting:"Total lessons planned",Value:"12"},{Setting:"Words goal",Value:"150"},{Setting:"Target skill rating (1-5)",Value:"4"}],
+    Lessons:[{"#":"1",Date:"2026-10-22","Topic (what you actually did)":"Daily routine & work-life balance",Grammar:"Present simple vs present continuous","Homework given":"Homework 1 (3 exercises) + learn the 12 words",Status:"Today"}],
+    Words:words.map(w=>{const p=w.split("|");return {"Word / phrase":p[0],"Meaning / translation":p[1],"Example sentence":p[2],"Lesson #":"1","Learned? (yes/no)":""};}),
+    Mistakes:[], Mock:[], Submissions:[]
+  };
+}
+
+/* ================= CSV / helpers ================= */
+function parseCSV(text){
+  const rows=[]; let row=[], cur="", q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else {
+      if(c==='"') q=true;
+      else if(c===','){ row.push(cur); cur=""; }
+      else if(c==='\n'){ row.push(cur); rows.push(row); row=[]; cur=""; }
+      else if(c!=='\r') cur+=c;
+    }
+  }
+  if(cur!==""||row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+function toObjects(rows){
+  if(!rows.length) return [];
+  const h=rows[0].map(s=>s.trim());
+  return rows.slice(1).filter(r=>r.some(c=>c.trim()!=="")).map(r=>{const o={};h.forEach((k,i)=>o[k]=(r[i]||"").trim());return o;});
+}
+function parseDate(s){
+  if(!s) return null; s=s.trim(); let m;
+  if((m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return new Date(+m[1],+m[2]-1,+m[3]);
+  if((m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/))) return new Date(+m[3],+m[2]-1,+m[1]);
+  if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))) return new Date(+m[3],+m[1]-1,+m[2]);
+  const d=new Date(s); return isNaN(d)?null:d;
+}
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num=s=>{const n=parseFloat(String(s).replace(",",".")); return isNaN(n)?null:n;};
+const fmtDate=d=>d?d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
+const $=id=>document.getElementById(id);
+const store={
+  get(k){try{return localStorage.getItem(k);}catch(e){return null;}},
+  set(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+};
+
+/* ================= load ================= */
+const TABS=["Settings","Lessons","Words","Mistakes","Mock"];
+async function loadTab(name){
+  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
+  const r=await fetch(url,{cache:"no-store"});
+  if(!r.ok) throw new Error(name+": HTTP "+r.status);
+  const t=await r.text();
+  if(t.trim().startsWith("<")) throw new Error(name+": sheet is not shared with 'Anyone with the link'");
+  return toObjects(parseCSV(t));
+}
+async function loadAll(){
+  if(!SHEET_ID) return starterData();
+  const res=await Promise.all(TABS.map(loadTab));
+  const data={}; TABS.forEach((n,i)=>data[n]=res[i]);
+  try{ const s=await loadTab("Submissions"); data.Submissions=s.filter(r=>r.Homework); }catch(e){ data.Submissions=[]; }
+  return data;
+}
+
+/* ================= compute ================= */
+const SKILLS=[["Grammar (1-5)","Grammar"],["Vocabulary (1-5)","Vocabulary"],["Speaking (1-5)","Speaking"],["Pronunciation (1-5)","Pronunciation"]];
+let STATE=null, ACTIVE="lessons";
+const isYes=v=>/^(yes|y|так|\+|1|true)$/i.test(v);
+
+function localDone(){ return HOMEWORK.filter(h=>store.get("hw_"+h.id)).map(h=>h.id); }
+
+function compute(data){
+  const S={}; (data.Settings||[]).forEach(r=>S[r.Setting]=r.Value);
+  const cfg={
+    name:(S["Student name"]||"").trim(),
+    testDate:parseDate(S["Test date"]),
+    goal:S["Goal"]||"Strong B1",
+    totalLessons:num(S["Total lessons planned"])||12,
+    wordsGoal:num(S["Words goal"])||150,
+    target:num(S["Target skill rating (1-5)"])||4
+  };
+  const lessons=(data.Lessons||[]).filter(r=>r["Date"]||r["Topic (what you actually did)"]||r.Status);
+  const done=lessons.filter(r=>/^done$/i.test(r.Status));
+  const latest={};
+  SKILLS.forEach(([col])=>{ for(let i=lessons.length-1;i>=0;i--){ const v=num(lessons[i][col]); if(v!==null){latest[col]=v;break;} } });
+  const words=(data.Words||[]).filter(r=>r["Word / phrase"]);
+  const learned=words.filter(r=>isYes(r["Learned? (yes/no)"]));
+  const mistakes=(data.Mistakes||[]).filter(r=>r["Mistake (what he said)"]);
+  const open=mistakes.filter(r=>!/fixed/i.test(r.Status));
+  const mocks=(data.Mock||[]).filter(r=>r.Test||r.Date).map(r=>{
+    let tot=num(r["Total %"]);
+    if(tot===null){ const v=["Grammar %","Vocabulary %","Speaking %"].map(k=>num(r[k])).filter(x=>x!==null); if(v.length) tot=v.reduce((a,b)=>a+b,0)/v.length; }
+    return {...r,total:tot};
+  });
+  const sheetHw=new Set((data.Submissions||[]).map(r=>r.Homework));
+  const hwIds=[...new Set([...sheetHw,...localDone()])];
+  const parts=[];
+  SKILLS.forEach(([col])=>{ if(latest[col]!==undefined) parts.push(Math.min(1,latest[col]/cfg.target)); });
+  parts.push(Math.min(1,learned.length/cfg.wordsGoal));
+  const overall=Math.round(parts.reduce((a,b)=>a+b,0)/parts.length*100);
+  return {cfg,lessons,done,latest,words,learned,mistakes,open,mocks,hwIds,overall};
+}
+
+/* ================= render ================= */
+function render(){
+  const s=STATE, c=s.cfg;
+  $("title").textContent=(c.name&&c.name!=="Student"?c.name+"'s":"Your")+" English progress";
+  $("subtitle").textContent="Goal: "+c.goal+(c.testDate?" · test on "+c.testDate.toLocaleDateString("en-GB",{day:"numeric",month:"long"}):"");
+  $("goal").textContent=c.goal;
+  if(c.testDate){ const t=new Date(); t.setHours(0,0,0,0); $("days").textContent=Math.max(0,Math.round((c.testDate-t)/86400000)); }
+  else $("days").textContent="–";
+  $("overallBar").style.width=s.overall+"%";
+  $("overallPct").textContent=s.overall+"%";
+  $("lessonsDone").textContent=s.done.length+" / "+c.totalLessons;
+  $("wordsLearned").textContent=s.learned.length+" / "+c.wordsGoal;
+  $("hwDone").textContent=s.hwIds.length;
+  $("mistakesOpen").textContent=s.open.length;
+  $("updated").textContent="Updated "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+  $("banner").innerHTML="";
+  $("skills").innerHTML=SKILLS.map(([col,label])=>{
+    const v=s.latest[col]; const pct=v===undefined?0:Math.min(100,v/5*100); const mark=c.target/5*100;
+    return `<div class="row"><span>${label}</span><small>${v===undefined?"not rated yet":v+" / 5 (target "+c.target+")"}</small></div>
+    <div class="bar"><i style="width:${pct}%"></i><span class="marker" style="left:${mark}%"></span></div>`;
+  }).join("");
+  renderPanel();
+}
+
+function renderPanel(){
+  const s=STATE, p=$("panel"); let h="";
+  if(ACTIVE==="homework"){
+    if(p.dataset.mode==="hwform") return;   // do not wipe typed answers on refresh
+    renderHomeworkList(); return;
+  }
+  p.dataset.mode="";
+  if(ACTIVE==="lessons"){
+    if(!s.lessons.length) h='<div class="empty">No lessons logged yet.</div>';
+    else h=`<div class="scroll"><table><tr><th>#</th><th>Date</th><th>Topic</th><th>Grammar</th><th>Homework</th><th>Status</th></tr>`+
+      s.lessons.map(r=>`<tr><td>${esc(r["#"])}</td><td>${esc(fmtDate(parseDate(r.Date)))}</td><td>${esc(r["Topic (what you actually did)"]||r["Draft plan (suggestion, ignore freely)"]||"")}</td><td>${esc(r.Grammar)}</td><td>${esc(r["Homework given"])}</td><td>${r.Status?`<span class="pill ${/done/i.test(r.Status)?"":"warn"}">${esc(r.Status)}</span>`:""}</td></tr>`).join("")+`</table></div>`;
+  } else if(ACTIVE==="words"){
+    if(!s.words.length) h='<div class="empty">No words yet.</div>';
+    else h=`<div class="scroll"><table><tr><th>Word</th><th>Meaning</th><th>Example</th><th>Status</th></tr>`+
+      s.words.map(r=>{const L=isYes(r["Learned? (yes/no)"]);
+        return `<tr><td><b>${esc(r["Word / phrase"])}</b></td><td>${esc(r["Meaning / translation"])}</td><td>${esc(r["Example sentence"])}</td><td>${L?'<span class="pill">learned</span>':'<span class="pill warn">to learn</span>'}</td></tr>`}).join("")+`</table></div>`;
+  } else if(ACTIVE==="mistakes"){
+    if(!s.mistakes.length) h='<div class="empty">No mistakes logged yet. After each lesson, the recurring ones will appear here.</div>';
+    else h=`<div class="scroll"><table><tr><th>Date</th><th>He said</th><th>Correct</th><th>Status</th></tr>`+
+      s.mistakes.map(r=>{const f=/fixed/i.test(r.Status);
+        return `<tr><td>${esc(fmtDate(parseDate(r.Date)))}</td><td>${esc(r["Mistake (what he said)"])}</td><td class="good">${esc(r["Correct version"])}</td><td><span class="pill ${f?"":"warn"}">${f?"fixed":"still happening"}</span></td></tr>`}).join("")+`</table></div>`;
+  } else {
+    const pts=s.mocks.filter(m=>m.total!==null);
+    if(!pts.length) h='<div class="empty">No mock tests yet. The first one will be around lesson 9.</div>';
+    else {
+      const W=600,H=170,pad=28;
+      const xs=pts.map((_,i)=>pts.length===1?W/2:pad+i*(W-2*pad)/(pts.length-1));
+      const ys=pts.map(m=>H-pad-(m.total/100)*(H-2*pad));
+      const line=pts.length>1?`<polyline fill="none" stroke="var(--accent)" stroke-width="3" points="${xs.map((x,i)=>x+","+ys[i]).join(" ")}"/>`:"";
+      h=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Mock test totals">
+        <line x1="${pad}" x2="${W-pad}" y1="${H-pad}" y2="${H-pad}" stroke="var(--line)"/>
+        <line x1="${pad}" x2="${W-pad}" y1="${H-pad-0.7*(H-2*pad)}" y2="${H-pad-0.7*(H-2*pad)}" stroke="var(--warn)" stroke-dasharray="4 4"/>
+        <text x="${W-pad}" y="${H-pad-0.7*(H-2*pad)-4}" text-anchor="end" font-size="11" fill="var(--warn)">70%</text>
+        ${line}${xs.map((x,i)=>`<circle cx="${x}" cy="${ys[i]}" r="5" fill="var(--accent)"/><text x="${x}" y="${ys[i]-10}" text-anchor="middle" font-size="12" fill="var(--ink)">${Math.round(pts[i].total)}%</text>`).join("")}
+      </svg>
+      <div class="scroll"><table><tr><th>Date</th><th>Test</th><th>Grammar</th><th>Vocab</th><th>Speaking</th><th>Total</th></tr>`+
+      s.mocks.map(r=>`<tr><td>${esc(fmtDate(parseDate(r.Date)))}</td><td>${esc(r.Test)}</td><td>${esc(r["Grammar %"])}</td><td>${esc(r["Vocabulary %"])}</td><td>${esc(r["Speaking %"])}</td><td><b>${r.total===null?"":Math.round(r.total)+"%"}</b></td></tr>`).join("")+`</table></div>`;
+    }
+  }
+  p.innerHTML=h;
+}
+
+/* ================= homework ================= */
+function renderHomeworkList(){
+  const p=$("panel"); p.dataset.mode="hwlist";
+  const sheetDone=new Set((STATE.hwIds||[]));
+  p.innerHTML='<div class="hwlist">'+HOMEWORK.map(h=>{
+    const done=sheetDone.has(h.id)||!!store.get("hw_"+h.id);
+    return `<div class="hwitem"><div><b>${esc(h.title)}</b><div class="hint">3 parts: choose the answer, fill the gap, write a short text</div></div>
+      <button class="btn ${done?"ghost":""}" data-open="${h.id}" type="button">${done?"View result":"Start"}</button></div>`;
+  }).join("")+'</div>';
+  p.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>openHomework(b.dataset.open)));
+}
+
+function norm(s){ return String(s||"").toLowerCase().replace(/[’`]/g,"'").replace(/\s+/g," ").trim(); }
+function countWords(t){ const m=String(t||"").trim().match(/\S+/g); return m?m.length:0; }
+function wordsUsedIn(text){ const t=norm(text); return WORDBANK.filter(w=>t.includes(w)); }
+
+function openHomework(id){
+  const hw=HOMEWORK.find(x=>x.id===id); const p=$("panel");
+  const saved=store.get("hw_"+id);
+  if(saved){ p.dataset.mode="hwresult"; p.innerHTML=resultHTML(hw,JSON.parse(saved),true); wireBack(); return; }
+  p.dataset.mode="hwform";
+  let h=`<div class="hw"><button class="btn ghost" type="button" id="back" style="margin-bottom:10px">← Back</button>
+  <h2 style="font-size:1.2rem;margin:4px 0">${esc(hw.title)}</h2><p class="intro">${esc(hw.intro)}</p>
+  <h3>Part 1. Choose the correct answer</h3><p class="intro">Present simple or present continuous?</p>`;
+  hw.ex1.forEach((q,i)=>{
+    h+=`<div class="q"><p><b>${i+1}.</b> ${esc(q.q)}</p>`+q.opts.map((o,j)=>`<label class="opt"><input type="radio" name="e1_${i}" value="${j}"> ${esc(o)}</label>`).join("")+`</div>`;
+  });
+  h+=`<h3>Part 2. Fill in the gap</h3><p class="intro">Use words from the text and the grammar from the lesson. The hint shows the first letter or the tense.</p>`;
+  hw.ex2.forEach((q,i)=>{
+    h+=`<div class="q"><div class="gap"><b>${i+1}.</b> <span>${esc(q.pre)}</span><input type="text" id="e2_${i}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Gap ${i+1}"><span>${esc(q.post)}</span></div><div class="hint">Hint: ${esc(q.hint)}</div></div>`;
+  });
+  h+=`<h3>Part 3. Write</h3><p class="intro">${esc(hw.ex3.prompt)}</p>
+  <div class="wb" id="wb">${WORDBANK.map(w=>`<span data-w="${esc(w)}">${esc(w)}</span>`).join("")}</div>
+  <textarea id="e3" placeholder="Write here…"></textarea>
+  <div class="hint" id="wc">0 words · 0 words from the bank used</div>
+  <div class="err" id="err" role="alert"></div>
+  <div style="margin-top:14px"><button class="btn" id="submit" type="button">Submit homework</button></div></div>`;
+  p.innerHTML=h; wireBack();
+  const ta=$("e3");
+  ta.addEventListener("input",()=>{
+    const used=wordsUsedIn(ta.value);
+    $("wc").textContent=countWords(ta.value)+" words · "+used.length+" words from the bank used";
+    document.querySelectorAll("#wb span").forEach(sp=>sp.classList.toggle("used",used.includes(sp.dataset.w)));
+  });
+  $("submit").addEventListener("click",()=>submitHomework(hw));
+}
+function wireBack(){ const b=$("back"); if(b) b.addEventListener("click",()=>{$("panel").dataset.mode="";renderPanel();}); }
+
+function submitHomework(hw){
+  const err=$("err"); err.textContent="";
+  const a1=hw.ex1.map((q,i)=>{const r=document.querySelector(`input[name="e1_${i}"]:checked`);return r?+r.value:null;});
+  if(a1.some(v=>v===null)){ err.textContent="Please answer all the questions in Part 1."; return; }
+  const text=$("e3").value;
+  if(countWords(text)<hw.ex3.minWords){ err.textContent=`Part 3: please write at least ${hw.ex3.minWords} words (you have ${countWords(text)}).`; return; }
+  const a2=hw.ex2.map((q,i)=>$("e2_"+i).value.trim());
+  const s1=a1.filter((v,i)=>v===hw.ex1[i].a).length;
+  const ok2=a2.map((v,i)=>hw.ex2[i].ans.map(norm).includes(norm(v)));
+  const s2=ok2.filter(Boolean).length;
+  const used=wordsUsedIn(text);
+  const res={id:hw.id,lesson:hw.lesson,a1,a2,ok2,s1,t1:hw.ex1.length,s2,t2:hw.ex2.length,text,used,ts:new Date().toISOString(),sent:null};
+  const btn=$("submit"); btn.disabled=true; btn.textContent="Sending…";
+  sendToSheet(hw,res).then(sent=>{
+    res.sent=sent; store.set("hw_"+hw.id,JSON.stringify(res));
+    const raw=STATE.raw; STATE=compute(raw); STATE.raw=raw; render0();
+    $("panel").dataset.mode="hwresult"; $("panel").innerHTML=resultHTML(hw,res,false); wireBack();
+    window.scrollTo({top:$("panel").offsetTop-10,behavior:"smooth"});
+  });
+}
+
+function readable1(hw,res){ return hw.ex1.map((q,i)=>{const ok=res.a1[i]===q.a; return `${i+1}) ${q.opts[res.a1[i]]} ${ok?"OK":"WRONG -> "+q.opts[q.a]}`;}).join("; "); }
+function readable2(hw,res){ return hw.ex2.map((q,i)=>`${i+1}) ${res.a2[i]||"(empty)"} ${res.ok2[i]?"OK":"WRONG -> "+q.ans[0]}`).join("; "); }
+
+async function sendToSheet(hw,res){
+  if(!SCRIPT_URL) return false;
+  const payload={homework:hw.id,lesson:hw.lesson,part1:`${res.s1}/${res.t1}`,part2:`${res.s2}/${res.t2}`,wordsUsed:res.used.length+": "+res.used.join(", "),writing:res.text,answers1:readable1(hw,res),answers2:readable2(hw,res)};
+  try{
+    await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
+    return true;
+  }catch(e){ return false; }
+}
+
+function resultHTML(hw,res,again){
+  let h=`<div class="hw"><button class="btn ghost" type="button" id="back" style="margin-bottom:10px">← Back</button>
+  <div class="result"><b>${esc(hw.title)}</b><br>Part 1: <b>${res.s1} / ${res.t1}</b> · Part 2: <b>${res.s2} / ${res.t2}</b> · Writing: <b>${countWords(res.text)} words</b>, ${res.used.length} words from the bank used.<br>
+  <span class="hint">${res.sent?"Sent to your teacher.":"Checked on this device. Saving to the teacher's sheet is not connected yet, so show this screen or send a screenshot."}</span></div>
+  <h3>Part 1: why each answer is right or wrong</h3>`;
+  hw.ex1.forEach((q,i)=>{
+    const ok=res.a1[i]===q.a;
+    h+=`<div class="q"><p><b>${i+1}.</b> ${esc(q.q)}</p><div class="fb ${ok?"ok":"no"}">${ok
+      ? "✓ <b>"+esc(q.opts[q.a])+"</b>. "+esc(q.why[q.a])
+      : "✗ You chose <b>"+esc(q.opts[res.a1[i]])+"</b>: "+esc(q.why[res.a1[i]])+"<br>✓ Correct: <b>"+esc(q.opts[q.a])+"</b>. "+esc(q.why[q.a])}</div></div>`;
+  });
+  h+=`<h3>Part 2: gaps</h3>`;
+  hw.ex2.forEach((q,i)=>{
+    const ok=res.ok2[i];
+    h+=`<div class="q"><p><b>${i+1}.</b> ${esc(q.pre)}<b>${esc(res.a2[i]||"…")}</b>${esc(q.post)}</p><div class="fb ${ok?"ok":"no"}">${ok?"✓ Correct.":"✗ Correct answer: <b>"+esc(q.ans[0])+"</b>"}</div></div>`;
+  });
+  h+=`<h3>Part 3: your text</h3><div class="q"><p style="white-space:pre-wrap">${esc(res.text)}</p><div class="hint">Your teacher will give feedback on this part in the next lesson.</div></div></div>`;
+  return h;
+}
+
+/* ================= wiring ================= */
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{
+  ACTIVE=b.dataset.tab; $("panel").dataset.mode="";
+  document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  renderPanel();
+}));
+function render0(){ // re-render only the header/stat area
+  const keep=$("panel").innerHTML, mode=$("panel").dataset.mode;
+  render(); if(mode){ $("panel").innerHTML=keep; $("panel").dataset.mode=mode; }
+}
+async function init(){
+  $("subtitle").textContent="Loading…";
+  try{
+    const data=await loadAll();
+    STATE=compute(data); STATE.raw=data; render();
+  }catch(e){
+    $("subtitle").textContent="Could not load the sheet";
+    $("banner").innerHTML='<div class="banner"><b>Could not load data.</b> Check that the Google Sheet is shared as "Anyone with the link can view", that the sheet ID is correct, and that the tab names have not been changed.<br><small>'+esc(e.message)+'</small></div>';
+  }
+}
+$("refresh").addEventListener("click",init);
+init();
+</script>
+</body>
+</html>
