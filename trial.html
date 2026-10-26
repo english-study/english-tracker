@@ -325,7 +325,7 @@ function renderDetail(){
   }
   if(view==='task'){
     const t=TASK[lvl()-1];
-    h=sheet('task',nodeTitle('task'),L(t[0],t[1]),`${t[2]?`<div class="pic">${esc(t[2])}</div>`:''}<div class="tpanel t-only"><h2>Teacher</h2><textarea id="f1" placeholder="Notes while he speaks">${esc(S.task.notes)}</textarea><p class="hint">Add mistakes in the panel on the right.</p></div>`);
+    h=sheet('task',nodeTitle('task'),L(t[0],t[1]),`${t[2]?`<div class="pic"><img src="picture.jpg" alt="" style="max-width:100%;max-height:60vh;border-radius:14px;display:block" onerror="this.replaceWith(document.createTextNode('Add picture.jpg next to this page'))"></div>`:''}<div class="tpanel t-only"><h2>Teacher</h2><textarea id="f1" placeholder="Notes while he speaks">${esc(S.task.notes)}</textarea><p class="hint">Add mistakes in the panel on the right.</p></div>`);
   }
   if(view==='mini'){
     const mi=MINI[lvl()-1];
