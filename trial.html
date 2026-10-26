@@ -425,7 +425,7 @@ $('#newBtn').addEventListener('click',()=>{const b=$('#newBtn');if(!armed){armed
   armed=0;b.textContent='New student';const lg=S.lang;S=fresh();S.lang=lg;prevDone={};view='map';save();renderTeacher();render();});
 
 if(MODE==='student'){
-  document.body.classList.add('student');document.title='English Map';
+  document.body.classList.add('student');document.title='Student - English Map';
   if(ch){ch.onmessage=e=>{const d=e.data||{};if(d.t==='state'){S=Object.assign(fresh(),d.S);view=d.view||'map';render();}};
     const hello=()=>{try{ch.postMessage({t:'hello'});}catch(e){}};hello();setInterval(hello,3000);}
   render();
@@ -434,6 +434,7 @@ if(MODE==='student'){
   if(ch){ch.onmessage=e=>{const d=e.data||{};if(d.t==='hello'){mark();sync();}};
     setInterval(()=>{const c=$('#conn');if(c.dataset.t&&Date.now()-(+c.dataset.t)>8000){c.textContent='student window: not connected';c.style.borderColor='';c.dataset.t='';}},2000);}
   $('#openStudent').addEventListener('click',()=>{let w=null;try{w=window.open(location.href.split('#')[0]+'#student','englishMapStudent','width=1100,height=820');}catch(e){}if(!w)$('#openHelp').style.color='var(--warn)';});
+  document.title='Teacher - English Map';
   renderTeacher();render();
 }
 })();
