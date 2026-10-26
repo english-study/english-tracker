@@ -1,0 +1,440 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>English Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600&display=swap">
+<style>
+/* Layout: a whiteboard canvas with sticky-note nodes around a name hub; detail opens as one large sheet. Teacher panel is a quiet side drawer. */
+:root{
+  --bg:#f7f6f2; --dot:#d8d6cd; --surface:#ffffff; --ink:#1d2330; --muted:#667085; --line:#dcdad0; --brand:#2f5bea; --brand-ink:#ffffff; --ok:#1f9d55; --warn:#c2570c;
+  --font:"Onest",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --display:"Unbounded","Onest",ui-sans-serif,system-ui,sans-serif;
+  --shadow:0 1px 0 rgba(29,35,48,.06),0 6px 18px rgba(29,35,48,.08);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#171a21;--dot:#2c313c;--surface:#202531;--ink:#eef0f5;--muted:#a1a8b8;--line:#343a49;--brand:#8aa8ff;--brand-ink:#10162a;--ok:#5fcf8e;--warn:#f0a064;--shadow:0 1px 0 rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.35);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171a21;--dot:#2c313c;--surface:#202531;--ink:#eef0f5;--muted:#a1a8b8;--line:#343a49;--brand:#8aa8ff;--brand-ink:#10162a;--ok:#5fcf8e;--warn:#f0a064;--shadow:0 1px 0 rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.35);color-scheme:dark}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg) radial-gradient(var(--dot) 1.2px,transparent 1.3px) 0 0/22px 22px;color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.45;padding-block:14px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button,input,select,textarea{font:inherit;color:var(--ink)}
+button{cursor:pointer}
+svg.i{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{max-width:1500px;margin:0 auto}
+.top{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;font-size:1.05rem;letter-spacing:-.01em}
+.brand i{width:28px;height:28px;border-radius:9px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-style:normal;font-size:.95rem}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 13px;font-size:.92rem;font-weight:500}
+.btn:hover{border-color:var(--brand)}
+.btn[aria-pressed="true"],.btn.on{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 14%,var(--surface));font-weight:600}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn:focus-visible,.node:focus-visible,.chip:focus-visible,.flip:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.shell{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+body.student .shell{grid-template-columns:minmax(0,1fr)}
+body.student .t-only{display:none!important}
+body.student main{pointer-events:none;user-select:none}
+body.student.mine #viewBtn{display:inline-block}
+body.student:not(.mine) #viewBtn{display:none}
+.drawer{background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:16px;min-width:0;position:sticky;top:12px}
+.drawer h2{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;margin:0 0 6px;color:var(--warn)}
+.drawer label{display:block;font-size:.8rem;color:var(--muted);margin:10px 0 3px}
+.drawer input,.drawer select,.drawer textarea{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:6px 9px;background:var(--bg);font-size:.92rem}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.errs{margin:8px 0 0;padding:0;list-style:none;font-size:.88rem}
+.errs li{border-bottom:1px solid var(--line);padding:5px 0;display:flex;gap:6px;justify-content:space-between;align-items:center}
+.errs b{font-weight:600}
+.banner{border:1.5px solid var(--warn);border-radius:12px;padding:10px 14px;margin-bottom:14px;background:color-mix(in srgb,var(--warn) 9%,var(--surface));font-size:.9rem}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:2px 10px;font-size:.8rem;background:var(--surface)}
+.hint{font-size:.84rem;color:var(--muted)}
+
+/* board */
+.board{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:44px 30px;padding:10px 0 8px}
+.board svg.wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.wires path{fill:none;stroke-width:3;stroke-linecap:round}
+.node{position:relative;z-index:1;text-align:left;border:0;border-radius:20px;padding:16px 18px 18px;min-height:128px;display:flex;flex-direction:column;gap:6px;background:var(--bg-c);box-shadow:var(--shadow);transition:transform .15s;min-width:0}
+.node:hover{transform:translateY(-3px) rotate(-.4deg)}
+.node .ico{width:38px;height:38px;border-radius:12px;background:var(--ac);color:#fff;display:grid;place-items:center;font-size:1.25rem;margin-bottom:2px}
+.node b{font-size:1.02rem;font-weight:600;color:#1d2330}
+.node .a{font-size:.95rem;color:#3d4556;overflow-wrap:anywhere}
+.node .a.empty{color:#5d6577;opacity:.8}
+.node:not(.done) .ico{opacity:.75}
+.node.done::after{content:"";position:absolute;right:14px;top:14px;width:22px;height:22px;border-radius:50%;background:var(--ac) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/70% no-repeat}
+.node.fresh{animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.92)}100%{transform:scale(1)}}
+.node .tag{background:rgba(255,255,255,.7);border-color:rgba(29,35,48,.12);color:#1d2330;margin:2px 4px 0 0}
+.hub{grid-column:2;grid-row:2;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;border-radius:28px;background:#1d2330;color:#fff;padding:20px 16px;box-shadow:var(--shadow);min-height:150px}
+:root[data-theme="dark"] .hub,@media (prefers-color-scheme: dark){.hub{background:#0e1118}}
+.hub .av{width:54px;height:54px;border-radius:50%;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:1.4rem}
+.hub input{width:100%;max-width:220px;text-align:center;border:0;border-bottom:2px solid rgba(255,255,255,.35);background:transparent;color:#fff;font-family:var(--display);font-weight:500;font-size:1.25rem;padding:2px 0}
+.hub input::placeholder{color:rgba(255,255,255,.45)}
+.hub .pr{font-size:.85rem;color:rgba(255,255,255,.75)}
+.bar{display:flex;gap:4px;margin-top:2px}
+.bar i{width:14px;height:6px;border-radius:3px;background:rgba(255,255,255,.22)}
+.bar i.on{background:#7ee0a5}
+.after{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap}
+
+/* detail sheet */
+.sheet{background:var(--surface);border-radius:24px;box-shadow:var(--shadow);overflow:hidden;border:1.5px solid var(--line)}
+.sheet .band{background:var(--bg-c);padding:18px 24px 20px;display:flex;flex-direction:column;gap:10px}
+.sheet .back{align-self:flex-start;border:0;background:rgba(255,255,255,.75);color:#1d2330;border-radius:99px;padding:6px 14px;font-weight:600;font-size:.92rem}
+.sheet .tt{display:flex;gap:14px;align-items:center}
+.sheet .tt .ico{width:48px;height:48px;border-radius:14px;background:var(--ac);color:#fff;display:grid;place-items:center;font-size:1.6rem}
+.sheet .tt small{display:block;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:#3d4556;font-weight:600}
+.sheet .q{font-family:var(--display);font-weight:500;font-size:clamp(1.25rem,2.6vw,1.8rem);line-height:1.25;margin:0;color:#1d2330;text-wrap:balance}
+.sheet .body{padding:22px 24px 26px}
+.field{margin:0 0 16px}
+.field>span{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px;font-weight:500}
+.sheet textarea,.sheet input[type=text],.sheet input[type=date],.sheet select{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--bg);font-size:1.1rem}
+.sheet textarea{min-height:140px;resize:vertical}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 16px}
+.chip{border:1.5px solid var(--line);background:var(--bg);border-radius:99px;padding:10px 18px;font-size:1.02rem;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
+.cd{display:inline-flex;gap:8px;align-items:center;margin-top:4px;font-weight:600;color:var(--ok)}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.fc{min-width:0}
+.fc .flip{perspective:900px;cursor:pointer;border-radius:18px;outline-offset:3px}
+.fc .in{display:grid;transition:transform .5s;transform-style:preserve-3d}
+.fc .in.on{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:18px;min-height:150px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px}
+.face.front{background:var(--bg-c);color:#1d2330;font-family:var(--display);font-weight:500;font-size:1.2rem;box-shadow:var(--shadow)}
+.face.front small{font-family:var(--font);font-size:.76rem;font-weight:500;color:#4b5365;opacity:.9}
+.face.back{transform:rotateY(180deg);background:var(--surface);border:2.5px solid var(--ac);font-size:1.08rem;line-height:1.35}
+.fc.like .face.front{outline:3px solid var(--ok);outline-offset:-3px}
+.fc.skip .face.front{opacity:.45}
+.fc .ctl{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;align-items:center}
+.fc .ctl button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:3px 9px;font-size:.8rem}
+.fc .ctl button.on{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 14%,var(--surface))}
+.pic{border:2px dashed var(--line);border-radius:16px;min-height:190px;display:grid;place-items:center;color:var(--muted);margin:0 0 14px}
+.tpanel{border:1.5px solid var(--warn);border-radius:14px;padding:12px 14px;margin-top:14px}
+.tpanel h2{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;margin:0 0 6px;color:var(--warn)}
+.tpanel textarea{min-height:100px;width:100%;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg);font-size:.95rem}
+.text{background:var(--bg);border-radius:16px;padding:18px 20px;font-size:1.3rem;line-height:1.85}
+.text .m{font-style:normal;border-radius:6px;padding:0 3px;transition:background .3s}
+.rv .text .m{background:#ffe08a;color:#1d2330}
+.fix{display:none;color:#a14a00;font-weight:600;font-size:.95em}
+.rv .fix{display:inline}
+.rule{margin-top:12px;border-radius:14px;padding:12px 16px;background:color-mix(in srgb,var(--ac) 13%,var(--surface));font-weight:500}
+.words{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.words span{background:var(--bg-c);color:#1d2330;border-radius:12px;padding:6px 12px;font-weight:600}
+.words small{display:block;font-weight:400;font-size:.78rem;color:#3d4556}
+
+/* summary */
+.sum{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:18px;padding:16px 18px;min-width:0}
+.card h3{margin:0 0 8px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.card.wide{grid-column:1/-1}
+.big{font-family:var(--display);font-weight:500;font-size:1.3rem;line-height:1.3;text-wrap:balance}
+.lvl{display:inline-grid;place-items:center;min-width:64px;height:64px;border-radius:18px;background:var(--brand);color:var(--brand-ink);font-family:var(--display);font-weight:600;font-size:1.6rem;padding:0 10px}
+.sk{display:grid;grid-template-columns:110px 1fr;gap:8px 12px;align-items:center;font-size:.95rem}
+.sk .tr{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.sk .tr i{display:block;height:100%;background:var(--brand);border-radius:5px}
+.fixrow{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line)}
+.fixrow s{color:var(--muted)}
+.fixrow b{color:var(--ok);font-weight:600}
+pre.out{white-space:pre-wrap;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:.88rem;overflow-x:auto;margin:0}
+@media (max-width:1000px){.shell{grid-template-columns:minmax(0,1fr)}.drawer{position:static}}
+@media (max-width:700px){
+  body{font-size:16px}
+  .board{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .board svg.wires{display:none}
+  .hub{grid-column:1/-1;grid-row:1}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sum{grid-template-columns:minmax(0,1fr)}
+  .sheet .band,.sheet .body{padding-left:16px;padding-right:16px}
+}
+@media (prefers-reduced-motion:reduce){.fc .in,.node,.node.fresh{transition:none;animation:none}}
+</style>
+
+<div class="wrap">
+<div class="top">
+  <div class="brand"><i aria-hidden="true">E</i><span id="brandTx">English Map</span></div>
+  <div class="row">
+    <span class="hint t-only">Questions in:</span>
+    <button class="btn t-only" id="langUa" type="button" aria-pressed="false">Українська</button>
+    <button class="btn t-only" id="langEn" type="button" aria-pressed="true">English</button>
+    <button class="btn t-only" id="openStudent" type="button">Open student window</button>
+    <button class="btn" id="viewBtn" type="button" aria-pressed="false">Hide panel (T)</button>
+  </div>
+</div>
+<div class="banner t-only" id="share"><b>Share only the student window.</b> In the Preply or Zoom dialog choose <b>Chrome Tab</b> (or Window), never Entire Screen. <span id="conn" class="tag">student window: not connected</span>
+  <div class="hint" id="openHelp" style="margin-top:4px">If no window opens: open this same page in a new Chrome window and add <b>#student</b> at the end of the address. Use the same Chrome profile, not incognito.</div></div>
+<div class="shell">
+  <main id="main"></main>
+  <aside class="drawer t-only" id="teacher">
+    <h2>Teacher only</h2>
+    <label for="gLevel">Level of cards, task and mini-lesson</label>
+    <select id="gLevel"><option value="1">1 - Elementary (A1-A2)</option><option value="2">2 - Intermediate (B1)</option><option value="3">3 - Upper-intermediate+ (B2+)</option></select>
+    <label for="cefr">My level estimate</label>
+    <select id="cefr"><option value="">-</option><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option></select>
+    <label>Skills (1-5)</label>
+    <div class="g2" id="skills"></div>
+    <label>Mistakes I heard</label>
+    <div class="g2"><input id="eSaid" placeholder="He said" aria-label="What he said"><input id="eFix" placeholder="Correct" aria-label="Correct version"></div>
+    <div class="g2" style="margin-top:6px"><select id="eTag" aria-label="Type"><option>tense</option><option>word order</option><option>articles</option><option>prepositions</option><option>vocabulary</option><option>pronunciation</option><option>other</option></select><button class="btn" id="eAdd" type="button">Add mistake</button></div>
+    <ul class="errs" id="errs"></ul>
+    <label for="tPlan">Plan for the first lessons (shown on the recap)</label>
+    <textarea id="tPlan" rows="3"></textarea>
+    <label for="tNotes">Private notes</label>
+    <textarea id="tNotes" rows="3"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="saveBtn" type="button">Save to sheet</button>
+      <button class="btn" id="copyBtn" type="button">Profile text</button>
+      <button class="btn" id="newBtn" type="button">New student</button>
+    </div>
+    <p class="hint" id="saveMsg" role="status"></p>
+  </aside>
+</div>
+</div>
+
+<script>
+(function(){
+/* Paste the Web app URL of the Apps Script for the Students sheet here (ends with /exec). Leave empty to disable saving. */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx--m1cdI9VKgitYK_92PkbIE1HZqcaTl_mmTggYZ-uWdkSc2ICThs66EE2n4k8hNiMVQ/exec";
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const MODE=(location.hash==='#student')?'student':'teacher';
+let ch=null;try{ch=new BroadcastChannel('english-map-trial');}catch(e){}
+const KEY='english-map-trial-v2';
+const fresh=()=>({flip:{},lang:'en',level:1,name:'',goal:'',why:'',deadline:'',where:[],whereText:'',exp:'',perWeek:'',days:'',hw:'',topics:{},task:{notes:''},mini:{reveal:false},cefr:'',skills:{},errors:[],plan:'',notes:''});
+let S=fresh();
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}
+let view='map';
+const sync=()=>{if(MODE==='teacher'&&ch)try{ch.postMessage({t:'state',S,view});}catch(e){}};
+const save=()=>{if(MODE==='student')return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}sync();};
+const L=(en,ua)=>S.lang==='ua'?ua:en;
+const lvl=()=>+S.level||1;
+
+const IC={
+ goal:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+ why:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ where:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+ exp:'<path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 19a2 2 0 012-2h13"/>',
+ time:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+ topics:'<path d="M4 5h16v11H9l-5 4z"/>',
+ task:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>',
+ mini:'<path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0012 3z"/>',
+ flip:'<path d="M4 12a8 8 0 0114-5l2-2v6h-6l2.2-2.2A5 5 0 007 12M20 12a8 8 0 01-14 5l-2 2v-6h6l-2.2 2.2A5 5 0 0017 12"/>'
+};
+const ico=k=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
+const COL={goal:['#dbe6ff','#2f5bea'],why:['#ffe2d2','#e4572e'],where:['#d9f1e2','#1f9d55'],exp:['#fff0bd','#c98a00'],time:['#e9defb','#7a4fd6'],topics:['#ffd8e6','#d6336c'],task:['#d3eff2','#0e8a94'],mini:['#e3ebc4','#5c7a12']};
+const CARDCOL=['goal','why','where','exp','time','topics','task','mini','why'];
+const NODES=[
+ {id:'goal',en:'My goal',ua:'Моя мета'},{id:'why',en:'Why now',ua:'Чому зараз'},{id:'where',en:'Where I use English',ua:'Де я користуюсь англійською'},
+ {id:'exp',en:'My experience',ua:'Мій досвід'},{id:'hub'},{id:'time',en:'My time',ua:'Мій час'},
+ {id:'topics',en:'Topics I like',ua:'Теми, що мені цікаві'},{id:'task',en:'Speaking task',ua:'Завдання: говоримо'},{id:'mini',en:'Mini-lesson',ua:'Міні-урок'}
+];
+const REAL=NODES.filter(n=>n.id!=='hub');
+const WHERE=[['Work','Робота'],['Job interview','Співбесіда'],['Travel','Подорожі'],['Exams','Іспити'],['Study abroad','Навчання за кордоном'],['Moving abroad','Переїзд'],['Series and games','Серіали та ігри'],['Friends','Друзі'],['Online communities','Онлайн-спільноти']];
+const TOPICS=[
+ ['Weekend','Вихідні',['What do you do on Saturday? Do you like it?','What did you do last weekend?','What would a perfect weekend look like for you, and why can’t you have it?'],['Що ти робиш у суботу? Тобі це подобається?','Що ти робив(ла) минулих вихідних?','Яким був би твій ідеальний вихідний і чому ти не можеш його мати?']],
+ ['Food','Їжа',['What do you eat for breakfast? Do you cook?','What did you eat or cook last time that you really enjoyed?','If you could change one thing about the way you eat, what would it be?'],['Що ти їси на сніданок? Ти готуєш?','Що ти останнім часом їв(ла) чи готував(ла) і тобі дуже смакувало?','Якби ти міг(могла) змінити одну річ у своєму харчуванні, що б це було?']],
+ ['A work day','Робочий день',['What is your job or study? Do you like it?','Describe a normal day at work or university.','What part of your job would you change if you could?'],['Ким ти працюєш або що вивчаєш? Тобі подобається?','Опиши звичайний день на роботі чи в університеті.','Що б ти змінив(ла) у своїй роботі, якби міг(могла)?']],
+ ['Series and films','Серіали та фільми',['Do you like films? What is your favourite?','What was the last series you watched? Would you recommend it?','Which series did you stop watching, and why?'],['Ти любиш фільми? Який твій улюблений?','Який серіал ти дивився(лась) останнім? Порадиш його?','Який серіал ти кинув(ла) дивитися і чому?']],
+ ['Travel','Подорожі',['Do you like travelling? Where do you want to go?','Where did you go on your last trip? What did you do?','Where would you live if you could live anywhere, and why?'],['Ти любиш подорожувати? Куди хочеш поїхати?','Куди ти їздив(ла) востаннє? Що ти там робив(ла)?','Де б ти жив(ла), якби міг(могла) жити будь-де, і чому?']],
+ ['Phone','Телефон',['What apps do you use every day?','How much time do you spend on your phone? Is it a problem?','Which app would you delete if you had to? What would change?'],['Якими застосунками ти користуєшся щодня?','Скільки часу ти проводиш у телефоні? Це проблема?','Який застосунок ти б видалив(ла), якби довелося? Що б змінилося?']],
+ ['Music','Музика',['What music do you like?','What kind of music did you listen to as a teenager?','Has your taste in music changed? What influenced it?'],['Яку музику ти любиш?','Яку музику ти слухав(ла) підлітком?','Твій смак у музиці змінився? Що на нього вплинуло?']],
+ ['Sport','Спорт',['Do you do sport? Which one?','What did you do the last time you were active?','What would make you exercise more regularly?'],['Ти займаєшся спортом? Яким?','Що ти робив(ла) останнього разу, коли був(ла) активним(ою)?','Що б змусило тебе займатися регулярніше?']],
+ ['Money','Гроші',['Do you like shopping? What do you buy online?','What was the last thing you bought? Are you happy with it?','Is there something you bought and regretted? What happened?'],['Ти любиш шопінг? Що купуєш онлайн?','Що ти купив(ла) останнім? Ти задоволений(на)?','Чи є щось, що ти купив(ла) і пошкодував(ла)? Що сталося?']]
+];
+const TASK=[
+ ['Look at the picture. What can you see? Then tell me: Where do you live? What do you like?','Подивись на картинку. Що ти бачиш? Потім розкажи: Де ти живеш? Що тобі подобається?','Picture goes here'],
+ ['Plan a day in your city for a friend who visits for the first time. Where do you take them? Why?','Сплануй день у твоєму місті для друга, який приїхав уперше. Куди ти його поведеш? Чому?',''],
+ ['Tell me about a decision you changed your mind about. What happened? What do you think now?','Розкажи про рішення, щодо якого ти змінив(ла) думку. Що сталося? Що ти думаєш тепер?','']
+];
+const MINI=[
+ {rule:['Add -s to the verb after he, she and it.','Після he, she, it до дієслова додаємо -s.'],text:'Anna lives in Lviv. She <i class="m" data-f="works">work</i> in a shop. On Saturday she <i class="m" data-f="gets up">get up</i> at nine. She likes coffee. On Sunday she <i class="m" data-f="doesn’t go">don’t go</i> to work.',words:[['shop','магазин'],['get up','прокидатися'],['weekend','вихідні'],['sometimes','іноді'],['coffee','кава']]},
+ {rule:['Past simple: after didn’t the verb stays in the base form. Get is irregular: get, got.','Past simple: після didn’t дієслово в початковій формі. Get - неправильне: get, got.'],text:'Max graduated from university in 2019. After that he worked as an administrator for one year. He <i class="m" data-f="didn’t like">didn’t liked</i> the work, so he <i class="m" data-f="started">start</i> to learn Linux in the evenings. Then he <i class="m" data-f="got">get</i> a job in an IT company.',words:[['graduate from','закінчити (університет)'],['administrator','адміністратор'],['after that','після цього'],['get a job','отримати роботу'],['in the evenings','вечорами']]},
+ {rule:['Third conditional: if + had + past participle, would have + past participle.','Third conditional: if + had + дієприкметник, would have + дієприкметник.'],text:'<i class="m" data-f="If I had known">If I would have known</i> about the deadline, I would have started earlier. I was working on the project when my laptop crashed, so I <i class="m" data-f="lost">have lost</i> two days of work. Luckily I had saved most of the files, so it wasn’t as bad as it <i class="m" data-f="could have been">could been</i>.',words:[['meet a deadline','дотриматися дедлайну'],['crash','збій, зависання'],['save a file','зберегти файл'],['damage','шкода'],['luckily','на щастя']]}
+];
+const SKILLS=['grammar','vocabulary','speaking','pronunciation','listening'];
+const UI={back:['Back to map','Назад до мапи'],tap:['tap to open','натисни'],flipHint:['tap to flip','перевернути'],show:['Show corrections','Показати виправлення'],hide:['Hide corrections','Сховати виправлення'],rule:['Rule','Правило'],of:['of','з'],done:['done','готово'],recap:['Show my English map','Показати мою мапу'],find:['Find 3 mistakes in the text. What is the rule?','Знайди 3 помилки в тексті. Яке правило?'],pickCard:['Pick a card and flip it. Answer the question.','Обери картку і переверни її. Дай відповідь на запитання.'],more:['Tell me more','Розкажи більше']};
+const U=k=>L(UI[k][0],UI[k][1]);
+
+function filled(id){
+  switch(id){
+    case 'goal':return !!S.goal;case 'why':return !!(S.why||S.deadline);case 'where':return !!(S.where.length||S.whereText);
+    case 'exp':return !!S.exp;case 'time':return !!(S.perWeek||S.days);
+    case 'topics':return Object.values(S.topics).some(t=>t.vote==='like'||t.vote==='ok');
+    case 'task':return !!(S.task.notes||S.errors.length);case 'mini':return !!S.mini.reveal;
+  }return false;
+}
+function days(){if(!S.deadline)return null;const d=new Date(S.deadline+'T00:00:00');const n=Math.ceil((d-new Date())/86400000);return isNaN(n)?null:n;}
+function bubble(id){
+  switch(id){
+    case 'goal':return esc(S.goal);
+    case 'why':{const d=days();return esc(S.why)+(d!=null&&d>=0?`<br><b>${d} ${esc(L('days to go','днів залишилось'))}</b>`:'');}
+    case 'where':return S.where.map(i=>`<span class="tag">${esc(L(WHERE[i][0],WHERE[i][1]))}</span>`).join('')+(S.whereText?'<br>'+esc(S.whereText):'');
+    case 'exp':return esc(S.exp);
+    case 'time':return esc([S.perWeek&&(S.perWeek+' '+L('lessons / week','уроків / тиждень')),S.days].filter(Boolean).join(' · '));
+    case 'topics':return TOPICS.map((t,i)=>(S.topics[i]&&S.topics[i].vote==='like')?`<span class="tag">${esc(L(t[0],t[1]))}</span>`:'').join('');
+    case 'task':return esc(L('We spoke about it','Ми це обговорили'));
+    case 'mini':return esc(U('done'));
+  }return '';
+}
+let prevDone={};
+function renderMap(){
+  const m=$('#main');const nDone=REAL.filter(n=>filled(n.id)).length;
+  const ini=(S.name.trim()[0]||'?').toUpperCase();
+  m.innerHTML=`<div class="board" id="board"><svg class="wires" id="wires" aria-hidden="true"></svg>`+NODES.map(n=>{
+    if(n.id==='hub')return `<div class="hub"><div class="av">${esc(ini)}</div><input id="name" type="text" placeholder="${esc(L('Your name','Твоє ім’я'))}" value="${esc(S.name)}" aria-label="Name" ${MODE==='student'?'readonly':''}><div class="pr">${nDone} ${esc(U('of'))} ${REAL.length}</div><div class="bar">${REAL.map(r=>`<i class="${filled(r.id)?'on':''}"></i>`).join('')}</div></div>`;
+    const f=filled(n.id),b=bubble(n.id),c=COL[n.id];
+    return `<button class="node ${f?'done':''} ${f&&!prevDone[n.id]?'fresh':''}" style="--bg-c:${c[0]};--ac:${c[1]}" data-n="${n.id}" type="button"><span class="ico">${ico(n.id)}</span><b>${esc(L(n.en,n.ua))}</b><span class="a ${b?'':'empty'}">${b||esc(U('tap'))}</span></button>`;
+  }).join('')+`</div><div class="after"><button class="btn primary" id="goSummary" type="button">${esc(U('recap'))}</button></div>`;
+  REAL.forEach(n=>prevDone[n.id]=filled(n.id));
+  const nm=$('#name');if(nm)nm.addEventListener('input',e=>{S.name=e.target.value;save();});
+  m.querySelectorAll('[data-n]').forEach(b=>b.addEventListener('click',()=>{view=b.dataset.n;render();}));
+  $('#goSummary').addEventListener('click',()=>{view='summary';render();});
+  requestAnimationFrame(drawWires);
+}
+function drawWires(){
+  const board=$('#board'),svg=$('#wires');if(!board||!svg)return;
+  const r=board.getBoundingClientRect(),h=board.querySelector('.hub');if(!h)return;
+  const hr=h.getBoundingClientRect(),cx=hr.left-r.left+hr.width/2,cy=hr.top-r.top+hr.height/2;
+  svg.setAttribute('viewBox',`0 0 ${r.width} ${r.height}`);
+  svg.innerHTML=[...board.querySelectorAll('[data-n]')].map(n=>{
+    const b=n.getBoundingClientRect(),x=b.left-r.left+b.width/2,y=b.top-r.top+b.height/2,id=n.dataset.n,f=filled(id);
+    const mx=(cx+x)/2+(y-cy)*.08,my=(cy+y)/2-(x-cx)*.08;
+    return `<path d="M${cx} ${cy} Q${mx} ${my} ${x} ${y}" stroke="${COL[id][1]}" stroke-opacity="${f?1:.45}" ${f?'':'stroke-dasharray="2 9"'}/>`;
+  }).join('');
+}
+function band(id,kicker,q){
+  const c=COL[id];
+  return `<div class="band" style="--bg-c:${c[0]};--ac:${c[1]}"><button class="back" id="back" type="button">← ${esc(U('back'))}</button><div class="tt"><span class="ico">${ico(id)}</span><div><small>${esc(kicker)}</small><p class="q">${esc(q)}</p></div></div></div>`;
+}
+function sheet(id,kicker,q,body){const c=COL[id];return `<section class="sheet" style="--bg-c:${c[0]};--ac:${c[1]}">${band(id,kicker,q)}<div class="body">${body}</div></section>`;}
+const RO=()=>MODE==='student'?'readonly':'';
+function bindv(sel,key,obj){const el=$(sel);if(!el)return;el.addEventListener('input',e=>{(obj||S)[key]=e.target.value;save();});}
+function nodeTitle(id){const n=NODES.find(x=>x.id===id);return L(n.en,n.ua);}
+function renderDetail(){
+  const m=$('#main');let h='';
+  if(view==='goal')h=sheet('goal',nodeTitle('goal'),L('What do you want from English right now?','Чого ти хочеш від англійської зараз?'),`<textarea id="f1" ${RO()} placeholder="${esc(L('A few words are enough','Достатньо кількох слів'))}">${esc(S.goal)}</textarea>`);
+  if(view==='why')h=sheet('why',nodeTitle('why'),L('Why now? Is there a deadline or an event?','Чому саме зараз? Є дедлайн чи подія?'),`<div class="field"><span>${esc(L('Why now','Чому зараз'))}</span><input id="f1" type="text" ${RO()} value="${esc(S.why)}"></div><div class="field"><span>${esc(L('Deadline or event date','Дата дедлайну чи події'))}</span><input id="f2" type="date" ${RO()} value="${esc(S.deadline)}"></div>${days()!=null&&days()>=0?`<div class="cd">${ico('time')} ${days()} ${esc(L('days to go','днів залишилось'))}</div>`:''}`);
+  if(view==='where')h=sheet('where',nodeTitle('where'),L('Where will you use English? Tap all that apply.','Де ти будеш користуватися англійською? Познач усе потрібне.'),`<div class="chips">`+WHERE.map((w,i)=>`<button class="chip" data-w="${i}" type="button" aria-pressed="${S.where.includes(i)}">${esc(L(w[0],w[1]))}</button>`).join('')+`</div><div class="field"><span>${esc(U('more'))}</span><textarea id="f1" ${RO()}>${esc(S.whereText)}</textarea></div>`);
+  if(view==='exp')h=sheet('exp',nodeTitle('exp'),L('How did you study English before? What worked and what didn’t?','Як ти вчив(ла) англійську раніше? Що працювало, а що ні?'),`<textarea id="f1" ${RO()}>${esc(S.exp)}</textarea>`);
+  if(view==='time')h=sheet('time',nodeTitle('time'),L('How many lessons a week? When can you study?','Скільки уроків на тиждень? Коли тобі зручно?'),`<div class="field"><span>${esc(L('Lessons per week','Уроків на тиждень'))}</span><select id="f1" ${MODE==='student'?'disabled':''}><option value="">-</option>${['1','2','3','4+'].map(v=>`<option ${S.perWeek===v?'selected':''}>${v}</option>`).join('')}</select></div><div class="field"><span>${esc(L('Days and time','Дні та час'))}</span><input id="f2" type="text" ${RO()} value="${esc(S.days)}"></div><div class="field"><span>${esc(L('Minutes for homework per day','Хвилин на домашнє завдання щодня'))}</span><input id="f3" type="text" ${RO()} value="${esc(S.hw)}"></div>`);
+  if(view==='topics'){
+    const cards=TOPICS.map((t,i)=>{
+      const st=S.topics[i]||{},cl=st.lvl||lvl(),c=COL[CARDCOL[i]];
+      return `<div class="fc ${st.vote||''}" data-i="${i}" style="--bg-c:${c[0]};--ac:${c[1]}"><div class="flip" role="button" tabindex="0" aria-label="${esc(L(t[0],t[1]))}"><div class="in ${S.flip&&S.flip[i]?'on':''}"><div class="face front">${esc(L(t[0],t[1]))}<small>${ico('flip')} ${esc(U('flipHint'))}</small></div><div class="face back">${esc(L(t[2][cl-1],t[3][cl-1]))}</div></div></div><div class="ctl t-only"><button data-v="like" class="${st.vote==='like'?'on':''}" type="button">like</button><button data-v="ok" class="${st.vote==='ok'?'on':''}" type="button">ok</button><button data-v="skip" class="${st.vote==='skip'?'on':''}" type="button">skip</button><button data-l="-1" type="button">easier</button><button data-l="1" type="button">harder</button><span class="hint">L${cl}</span></div></div>`;}).join('');
+    h=sheet('topics',nodeTitle('topics'),U('pickCard'),`<div class="cards">${cards}</div>`);
+  }
+  if(view==='task'){
+    const t=TASK[lvl()-1];
+    h=sheet('task',nodeTitle('task'),L(t[0],t[1]),`${t[2]?`<div class="pic">${esc(t[2])}</div>`:''}<div class="tpanel t-only"><h2>Teacher</h2><textarea id="f1" placeholder="Notes while he speaks">${esc(S.task.notes)}</textarea><p class="hint">Add mistakes in the panel on the right.</p></div>`);
+  }
+  if(view==='mini'){
+    const mi=MINI[lvl()-1];
+    const txt=mi.text.replace(/<i class="m" data-f="([^"]*)">([^<]*)<\/i>/g,(a,f,w)=>`<i class="m" data-f="${f}">${w}</i><span class="fix"> → ${f}</span>`);
+    h=sheet('mini',nodeTitle('mini'),U('find'),`<div id="miniBox" class="${S.mini.reveal?'rv':''}"><div class="text">${txt}</div><div class="rule">${esc(U('rule'))}: ${esc(L(mi.rule[0],mi.rule[1]))}</div><div class="words" style="--bg-c:${COL.mini[0]}">${mi.words.map(w=>`<span>${esc(w[0])}${S.lang==='ua'?`<small>${esc(w[1])}</small>`:''}</span>`).join('')}</div><div class="t-only" style="margin-top:14px"><button class="btn" id="rv" type="button">${esc(S.mini.reveal?U('hide'):U('show'))}</button> <span class="hint">Level ${lvl()}. Change it in the panel.</span></div></div>`);
+  }
+  if(view==='summary')h=summaryHtml();
+  m.innerHTML=h;
+  const bk=$('#back');if(bk)bk.addEventListener('click',()=>{view='map';render();});
+  {const k=({goal:'goal',exp:'exp'})[view];if(k)bindv('#f1',k);}
+  if(view==='where'){bindv('#f1','whereText');m.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.w,k=S.where.indexOf(i);k>=0?S.where.splice(k,1):S.where.push(i);save();b.setAttribute('aria-pressed',S.where.includes(i));}));}
+  if(view==='why'){bindv('#f1','why');bindv('#f2','deadline');if($('#f2'))$('#f2').addEventListener('change',()=>renderDetail());}
+  if(view==='time'){bindv('#f1','perWeek');bindv('#f2','days');bindv('#f3','hw');}
+  if(view==='task')bindv('#f1','notes',S.task);
+  if(view==='mini'&&$('#rv'))$('#rv').addEventListener('click',()=>{S.mini.reveal=!S.mini.reveal;save();renderDetail();});
+  if(view==='topics'){
+    m.querySelectorAll('.fc').forEach(fc=>{const i=+fc.dataset.i;
+      const fl=fc.querySelector('.flip');
+      const tg=()=>{const on=!S.flip[i];S.flip[i]=on;save();fc.querySelector('.in').classList.toggle('on',on);};
+      fl.addEventListener('click',tg);fl.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tg();}});
+      fc.querySelectorAll('[data-v]').forEach(b=>b.addEventListener('click',()=>{S.topics[i]=S.topics[i]||{};S.topics[i].vote=S.topics[i].vote===b.dataset.v?'':b.dataset.v;save();renderDetail();}));
+      fc.querySelectorAll('[data-l]').forEach(b=>b.addEventListener('click',()=>{S.topics[i]=S.topics[i]||{};const c=(S.topics[i].lvl||lvl())+(+b.dataset.l);S.topics[i].lvl=Math.max(1,Math.min(3,c));save();renderDetail();}));
+    });
+  }
+}
+function summaryHtml(){
+  const liked=TOPICS.map((t,i)=>S.topics[i]&&S.topics[i].vote==='like'?`<span class="tag">${esc(L(t[0],t[1]))}</span>`:'').join(' ');
+  const sk=SKILLS.filter(k=>S.skills[k]).map(k=>`<span>${esc(k)}</span><div class="tr"><i style="width:${(+S.skills[k])*20}%"></i></div>`).join('');
+  const fixes=S.errors.slice(0,4).map(e=>`<div class="fixrow"><s>${esc(e.said)}</s> → <b>${esc(e.fix)}</b> <span class="tag">${esc(e.tag)}</span></div>`).join('');
+  const d=days();
+  const w=S.where.map(i=>`<span class="tag">${esc(L(WHERE[i][0],WHERE[i][1]))}</span>`).join(' ');
+  return `<div class="row" style="margin-bottom:12px"><button class="btn back2" id="back" type="button">← ${esc(U('back'))}</button></div>
+  <div class="sum">
+   <div class="card wide" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><span class="lvl">${esc(S.cefr||'?')}</span><div><h3 style="margin:0 0 4px">${esc(L('My English map','Моя мапа англійської'))}</h3><div class="big">${esc(S.name||'')}</div></div></div>
+   <div class="card"><h3>${esc(L('My goal','Моя мета'))}</h3><div class="big">${esc(S.goal||'-')}</div></div>
+   <div class="card"><h3>${esc(L('Why now','Чому зараз'))}</h3><div>${esc(S.why||'-')}</div>${d!=null&&d>=0?`<div class="cd">${ico('time')} ${d} ${esc(L('days to go','днів залишилось'))}</div>`:''}</div>
+   <div class="card"><h3>${esc(L('Where I use English','Де я користуюсь англійською'))}</h3><div>${w||'-'}${S.whereText?'<br>'+esc(S.whereText):''}</div></div>
+   <div class="card"><h3>${esc(L('Topics I like','Теми, що мені цікаві'))}</h3><div>${liked||'-'}</div></div>
+   ${sk?`<div class="card"><h3>${esc(L('Skills','Навички'))}</h3><div class="sk">${sk}</div></div>`:''}
+   ${fixes?`<div class="card"><h3>${esc(L('Let’s work on','Над чим попрацюємо'))}</h3>${fixes}</div>`:''}
+   ${S.plan?`<div class="card wide"><h3>${esc(L('First lessons','Перші уроки'))}</h3><div style="white-space:pre-wrap">${esc(S.plan)}</div></div>`:''}
+   <div class="card wide t-only"><h3>Profile text (copy this)</h3><pre class="out">${esc(profileText())}</pre></div>
+  </div>`;
+}
+function profileText(){
+  const liked=TOPICS.map((t,i)=>S.topics[i]&&S.topics[i].vote==='like'?t[0]+' (L'+(S.topics[i].lvl||lvl())+')':'').filter(Boolean).join(', ');
+  const skipped=TOPICS.map((t,i)=>S.topics[i]&&S.topics[i].vote==='skip'?t[0]:'').filter(Boolean).join(', ');
+  return ['Name: '+S.name,'Goal: '+S.goal,'Why now: '+S.why,'Deadline: '+S.deadline,'Use English: '+S.where.map(i=>WHERE[i][0]).join(', ')+(S.whereText?' ('+S.whereText+')':''),
+   'Experience: '+S.exp,'Lessons per week: '+S.perWeek,'Days and time: '+S.days,'Homework minutes/day: '+S.hw,'Topics liked: '+liked,'Topics skipped: '+skipped,
+   'Level estimate: '+S.cefr,'Skills: '+SKILLS.map(k=>k+' '+(S.skills[k]||'-')).join(', '),
+   'Task notes: '+S.task.notes,'Mistakes: '+S.errors.map(e=>`[${e.tag}] "${e.said}" -> "${e.fix}"`).join('; '),'Plan: '+S.plan,'Teacher notes: '+S.notes].join('\n');
+}
+function payload(){
+  return {name:S.name,lang:S.lang,goal:S.goal,why:S.why,deadline:S.deadline,where:S.where.map(i=>WHERE[i][0]).join(', '),whereText:S.whereText,exp:S.exp,perWeek:S.perWeek,days:S.days,hw:S.hw,
+   liked:TOPICS.map((t,i)=>S.topics[i]&&S.topics[i].vote==='like'?t[0]:'').filter(Boolean).join(', '),skipped:TOPICS.map((t,i)=>S.topics[i]&&S.topics[i].vote==='skip'?t[0]:'').filter(Boolean).join(', '),
+   cefr:S.cefr,skills:S.skills,taskNotes:S.task.notes,plan:S.plan,notes:S.notes,errors:S.errors,
+   topics:TOPICS.map((t,i)=>({topic:t[0],vote:(S.topics[i]&&S.topics[i].vote)||'',level:(S.topics[i]&&S.topics[i].lvl)||lvl()})).filter(x=>x.vote)};
+}
+function renderTeacher(){
+  $('#gLevel').value=String(S.level);$('#cefr').value=S.cefr;$('#tNotes').value=S.notes;$('#tPlan').value=S.plan;
+  $('#skills').innerHTML=SKILLS.map(k=>`<div><label for="sk_${k}">${k}</label><select id="sk_${k}" data-k="${k}"><option value="">-</option>${[1,2,3,4,5].map(v=>`<option ${S.skills[k]==v?'selected':''}>${v}</option>`).join('')}</select></div>`).join('');
+  $('#skills').querySelectorAll('select').forEach(s=>s.addEventListener('change',()=>{S.skills[s.dataset.k]=s.value;save();}));
+  drawErrs();
+}
+function drawErrs(){
+  $('#errs').innerHTML=S.errors.map((e,i)=>`<li><span><b>${esc(e.tag)}</b>: ${esc(e.said)} → ${esc(e.fix)}</span> <button class="btn" data-x="${i}" type="button" style="padding:0 8px" aria-label="Remove">x</button></li>`).join('');
+  $('#errs').querySelectorAll('[data-x]').forEach(b=>b.addEventListener('click',()=>{S.errors.splice(+b.dataset.x,1);save();drawErrs();render();}));
+}
+function render(){
+  $('#langUa').setAttribute('aria-pressed',S.lang==='ua');$('#langEn').setAttribute('aria-pressed',S.lang==='en');
+  if(view==='map')renderMap();else renderDetail();
+  sync();
+}
+function setStudent(on){document.body.classList.toggle('student',on);document.body.classList.toggle('mine',on);$('#viewBtn').setAttribute('aria-pressed',on);$('#viewBtn').textContent=on?'Show panel (T)':'Hide panel (T)';requestAnimationFrame(drawWires);}
+
+/* teacher wiring */
+$('#langUa').addEventListener('click',()=>{S.lang='ua';save();render();});
+$('#langEn').addEventListener('click',()=>{S.lang='en';save();render();});
+$('#gLevel').addEventListener('change',e=>{S.level=+e.target.value;save();if(view!=='map')render();});
+$('#cefr').addEventListener('change',e=>{S.cefr=e.target.value;save();if(view==='summary')render();});
+$('#tNotes').addEventListener('input',e=>{S.notes=e.target.value;save();});
+$('#tPlan').addEventListener('input',e=>{S.plan=e.target.value;save();});
+$('#eAdd').addEventListener('click',()=>{const s=$('#eSaid').value.trim(),f=$('#eFix').value.trim();if(!s&&!f)return;S.errors.push({said:s,fix:f,tag:$('#eTag').value});$('#eSaid').value='';$('#eFix').value='';save();drawErrs();if(view==='map'||view==='summary')render();});
+$('#copyBtn').addEventListener('click',()=>{view='summary';render();});
+$('#viewBtn').addEventListener('click',()=>setStudent(!document.body.classList.contains('student')));
+document.addEventListener('keydown',e=>{if(MODE==='student')return;if((e.key==='t'||e.key==='T')&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName||''))setStudent(!document.body.classList.contains('student'));});
+window.addEventListener('resize',drawWires);
+$('#saveBtn').addEventListener('click',async()=>{
+  const msg=$('#saveMsg');
+  if(!SCRIPT_URL){msg.textContent='Saving is not connected yet. Use Profile text and paste it into the chat.';return;}
+  msg.textContent='Saving...';
+  try{await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload())});msg.textContent='Sent. Check the Students tab in your sheet to be sure it arrived.';}
+  catch(e){msg.textContent='Could not send. Use Profile text and paste it into the chat.';}
+});
+let armed=0;
+$('#newBtn').addEventListener('click',()=>{const b=$('#newBtn');if(!armed){armed=1;b.textContent='Click again to clear everything';setTimeout(()=>{armed=0;b.textContent='New student';},4000);return;}
+  armed=0;b.textContent='New student';const lg=S.lang;S=fresh();S.lang=lg;prevDone={};view='map';save();renderTeacher();render();});
+
+if(MODE==='student'){
+  document.body.classList.add('student');document.title='English Map';
+  if(ch){ch.onmessage=e=>{const d=e.data||{};if(d.t==='state'){S=Object.assign(fresh(),d.S);view=d.view||'map';render();}};
+    const hello=()=>{try{ch.postMessage({t:'hello'});}catch(e){}};hello();setInterval(hello,3000);}
+  render();
+}else{
+  const mark=()=>{const c=$('#conn');c.textContent='student window: connected';c.style.borderColor='var(--ok)';c.dataset.t=Date.now();};
+  if(ch){ch.onmessage=e=>{const d=e.data||{};if(d.t==='hello'){mark();sync();}};
+    setInterval(()=>{const c=$('#conn');if(c.dataset.t&&Date.now()-(+c.dataset.t)>8000){c.textContent='student window: not connected';c.style.borderColor='';c.dataset.t='';}},2000);}
+  $('#openStudent').addEventListener('click',()=>{let w=null;try{w=window.open(location.href.split('#')[0]+'#student','englishMapStudent','width=1100,height=820');}catch(e){}if(!w)$('#openHelp').style.color='var(--warn)';});
+  renderTeacher();render();
+}
+})();
+</script>
