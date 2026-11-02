@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2f5d50">
+<title>My English</title>
+<style>
+:root{
+  --bg:#f6f4ee; --card:#ffffff; --ink:#1f2a27; --muted:#6b7773; --line:#e4e0d4;
+  --accent:#2f5d50; --accent-ink:#ffffff; --accent-soft:#dcebe5; --warn:#c8742b; --warn-soft:#f8e8d6;
+  --ok:#2f7d4f; --ok-soft:#dcf0e3; --bad:#b3382c; --bad-soft:#f6dfdb; --blue:#2a47d6; --blue-soft:#e4e9fb;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#141a18; --card:#1d2523; --ink:#eef1ee; --muted:#9aa7a2; --line:#2c3633;
+    --accent:#6fbf9f; --accent-ink:#10201a; --accent-soft:#25382f; --warn:#e39a55; --warn-soft:#3a2d1f;
+    --ok:#6fcf93; --ok-soft:#1c3a29; --bad:#ee8a7e; --bad-soft:#3d2623; --blue:#9bb0ff; --blue-soft:#222e52; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 70px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{opacity:.55;cursor:default}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+header{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+h1{margin:0;font-size:1.7rem;letter-spacing:-.01em}
+h2{margin:0 0 10px;font-size:1.15rem}
+h3{margin:0 0 6px;font-size:1.02rem}
+.sub{color:var(--muted);font-size:.95rem;margin:4px 0 0}
+.count{background:var(--accent);color:var(--accent-ink);border-radius:16px;padding:12px 20px;text-align:center;min-width:140px}
+.count b{display:block;font-size:2.1rem;line-height:1.1}
+.count span{font-size:.85rem;opacity:.92}
+.banner{background:var(--warn-soft);border:1px solid var(--warn);border-radius:12px;padding:10px 14px;margin-bottom:16px;font-size:.92rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.stat b{display:block;font-size:1.5rem;line-height:1.2}
+.stat span{color:var(--muted);font-size:.85rem}
+.bar{height:8px;background:var(--accent-soft);border-radius:99px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tabs button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 18px;font-weight:500}
+.tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.tabs .dot{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:99px;background:var(--warn);color:#fff;font-size:.78rem;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.8rem;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.pill.blue{background:var(--blue-soft);color:var(--blue)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.muted{color:var(--muted)}
+.empty{padding:26px 18px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px;background:var(--card)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 18px;font-weight:500}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.next{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+/* homework */
+.part{margin:18px 0 8px;font-weight:700}
+.q{padding:12px 0;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0}
+.qt{margin:0 0 8px;font-size:1.05rem}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border:1px solid var(--line);border-radius:10px;margin:6px 0;cursor:pointer;background:var(--card)}
+.opt input{margin-top:5px;accent-color:var(--accent);width:18px;height:18px}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+input.gap{font:inherit;color:var(--ink);background:var(--bg);border:0;border-bottom:2px solid var(--accent);border-radius:6px 6px 0 0;padding:2px 8px;margin:0 4px;min-width:7em;max-width:100%}
+.hint{color:var(--muted);font-size:.85rem;margin-left:4px}
+textarea{width:100%;min-height:130px;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.score{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.score b{font-size:2.2rem;line-height:1}
+.res{padding:10px 12px;border-radius:10px;margin:8px 0;border:1px solid var(--line);background:var(--card)}
+.res.ok{border-color:var(--ok);background:var(--ok-soft)}
+.res.bad{border-color:var(--bad);background:var(--bad-soft)}
+.res p{margin:3px 0}
+.why{color:var(--muted);font-size:.93rem}
+/* words */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.wc{perspective:900px}
+.wc-in{position:relative;min-height:110px;transition:transform .45s;transform-style:preserve-3d;cursor:pointer;border-radius:14px}
+.wc-in.on{transform:rotateY(180deg)}
+.wf{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px solid var(--line)}
+.wf.front{background:var(--accent-soft)}
+.wf.front b{font-size:1.15rem}
+.wf.back{transform:rotateY(180deg);background:var(--card)}
+.wf.back small{color:var(--muted);margin-top:4px}
+.wc.known .wf.front{background:var(--ok-soft);border-color:var(--ok)}
+.wc .know{margin-top:6px;width:100%;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:5px 8px;font-size:.88rem}
+.wc.known .know{background:var(--ok);border-color:var(--ok);color:#fff}
+.group{margin:18px 0 8px;font-weight:700}
+/* mistakes */
+.mrow{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline;padding:10px 0;border-top:1px solid var(--line)}
+.mrow:first-child{border-top:0}
+.said{color:var(--bad);text-decoration:line-through}
+.fixed{color:var(--ok);font-weight:600}
+footer{margin-top:30px;color:var(--muted);font-size:.9rem;text-align:center}
+@media (max-width:560px){ h1{font-size:1.4rem} .count{width:100%} }
+@media (prefers-reduced-motion: reduce){ .wc-in{transition:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="banner" id="demoBanner" hidden><b>Demo.</b> This page shows sample data, so you can see how it will look after a few lessons. Nothing here is saved.</div>
+  <header>
+    <div><h1 id="hello">My English</h1><p class="sub" id="sub"></p></div>
+    <div class="count" id="count" hidden><b id="days">0</b><span id="daysLbl">days to go</span></div>
+  </header>
+  <div id="stats" class="stats" hidden></div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Sections" hidden></nav>
+  <main id="view"><div class="empty">Loading…</div></main>
+  <footer>Questions? Message Adriana. This page is only yours, so please don't share the link.</footer>
+</div>
+
+<script>
+const SUPABASE_URL="https://lzsjloygvzhfhxsvsmdo.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6c2psb3lndnpoZmh4c3ZzbWRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2Mzk4NzcsImV4cCI6MjEwOTIxNTg3N30.FNvVtJ79ir-EQdgH8aP9vZauJQF2MdEPh4ZIu3PDjF4"; // public key: it can only call the three student functions
+
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const LET='ABCDEFGH';
+const params=new URLSearchParams(location.search);
+const DEMO=params.has('demo');
+let code=(params.get('code')||'').trim();
+if(!code&&!DEMO){try{code=localStorage.getItem('en-code')||'';}catch(e){}}
+let data=null, tab='lessons', form={}, retry={}, openHw={}, onlyNew=false;
+
+/* ---------- talking to the base ---------- */
+async function rpc(fn,body){
+  if(DEMO) return demoRpc(fn,body);
+  const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+async function load(){
+  $('#view').innerHTML='<div class="empty">Loading…</div>';
+  if(!code&&!DEMO){ askCode(); return; }
+  try{ data=await rpc('student_view',{p_code:code}); }
+  catch(e){ $('#view').innerHTML='<div class="empty">I could not load your page. Check your internet and <button class="btn" id="retry">try again</button>.</div>'; $('#retry').onclick=load; return; }
+  if(!data){ try{localStorage.removeItem('en-code');}catch(e){} askCode('This link does not work. Ask Adriana for a new one, or type your code here.'); return; }
+  if(!DEMO){ try{localStorage.setItem('en-code',code);}catch(e){} }
+  render();
+}
+function askCode(msg){
+  $('#hello').textContent='My English'; $('#sub').textContent=''; $('#stats').hidden=true; $('#tabs').hidden=true; $('#count').hidden=true;
+  $('#view').innerHTML=`<div class="card"><h2>${esc(msg||'Open your page')}</h2><p class="muted">Your personal code is in the link Adriana sent you.</p><form id="codeForm"><input id="codeIn" class="gap" style="min-width:14em" placeholder="your code" autocomplete="off"> <button class="btn primary" type="submit">Open</button></form></div>`;
+  $('#codeForm').onsubmit=e=>{e.preventDefault();code=$('#codeIn').value.trim();load();};
+}
+
+/* ---------- helpers ---------- */
+const fmtDate=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
+const wordsCount=t=>(t||'').trim().split(/\s+/).filter(Boolean).length;
+const norm=s=>String(s||'').toLowerCase().replace(/[’`]/g,"'").replace(/[.!?]+\s*$/,'').replace(/n't\b/g,' not').replace(/'m\b/g,' am').replace(/'re\b/g,' are').replace(/'s\b/g,' is').replace(/\s+/g,' ').trim();
+const lessonTitle=id=>{const l=(data.lessons||[]).find(l=>l.id===id);return l?l.title:'';};
+
+/* ---------- header and stats ---------- */
+function renderTop(){
+  const st=data.student||{};
+  $('#hello').textContent='Hi, '+(st.name||'')+'!';
+  $('#sub').textContent=[st.level?'Level '+st.level:'',st.goal||''].filter(Boolean).join(' · ');
+  if(st.deadline){
+    const days=Math.ceil((new Date(st.deadline+'T00:00:00')-new Date(new Date().toDateString()))/86400000);
+    if(days>=0){ $('#days').textContent=days; $('#daysLbl').textContent='days to '+fmtDate(st.deadline); $('#count').hidden=false; } else $('#count').hidden=true;
+  } else $('#count').hidden=true;
+  const L=data.lessons||[], W=data.words||[], H=data.homework||[], M=data.mistakes||[];
+  const done=L.filter(l=>l.status==='done').length, known=W.filter(w=>w.learned).length, hwDone=H.filter(h=>h.latest).length;
+  const graded=H.filter(h=>h.latest&&h.latest.max>0), avg=graded.length?Math.round(100*graded.reduce((a,h)=>a+h.latest.score/h.latest.max,0)/graded.length):null;
+  const still=M.filter(m=>m.status!=='fixed').length;
+  const bar=p=>`<div class="bar"><i style="width:${Math.max(0,Math.min(100,p))}%"></i></div>`;
+  $('#stats').innerHTML=`
+    <div class="stat"><b>${done}</b><span>lessons done${L.length>done?' · '+(L.length-done)+' coming':''}</span></div>
+    <div class="stat"><b>${known}<small class="muted"> / ${W.length}</small></b><span>words I know</span>${bar(W.length?100*known/W.length:0)}</div>
+    <div class="stat"><b>${hwDone}<small class="muted"> / ${H.length}</small></b><span>homework done${avg!==null?' · average '+avg+'%':''}</span>${bar(H.length?100*hwDone/H.length:0)}</div>
+    <div class="stat"><b>${still}</b><span>mistakes to work on</span></div>`;
+  $('#stats').hidden=false;
+  const todo=H.filter(h=>!h.latest).length;
+  const tabs=[['lessons','Lessons',0],['homework','Homework',todo],['words','Words',0],['mistakes','Mistakes',0]];
+  $('#tabs').innerHTML=tabs.map(t=>`<button type="button" role="tab" data-tab="${t[0]}" aria-selected="${tab===t[0]}">${t[1]}${t[2]?`<span class="dot">${t[2]}</span>`:''}</button>`).join('');
+  $('#tabs').hidden=false;
+}
+
+/* ---------- lessons ---------- */
+function viewLessons(){
+  const L=data.lessons||[];
+  if(!L.length) return '<div class="empty">Your lessons will appear here.</div>';
+  const today=new Date().toISOString().slice(0,10);
+  const nextId=(L.filter(l=>l.status==='planned'&&(!l.date||l.date>=today))[0]||{}).id;
+  return L.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map((l,i)=>`
+    <div class="card row ${l.id===nextId?'next':''}"><div><b>${esc(l.title)}</b><div class="muted">${l.date?fmtDate(l.date):''}</div></div>
+    <span>${l.id===nextId?'<span class="pill blue">Next lesson</span> ':''}<span class="pill ${l.status==='done'?'ok':l.status==='skipped'?'warn':'blue'}">${l.status==='done'?'Done':l.status==='skipped'?'Skipped':'Planned'}</span></span></div>`).join('');
+}
+
+/* ---------- homework ---------- */
+function hwForm(h){
+  const f=form[h.id]=form[h.id]||{};
+  const parts=(h.content&&h.content.parts)||[];
+  let n=0;
+  const html=parts.map((p,pi)=>{
+    const title=p.title||('Part '+(pi+1));
+    if(p.type==='choice'){
+      f[p.id]=f[p.id]||[];
+      return `<div class="part">${esc(title)}${p.hint?` <span class="muted" style="font-weight:400">· ${esc(p.hint)}</span>`:''}</div>`+(p.items||[]).map((it,i)=>`
+        <div class="q"><p class="qt"><b>${i+1}.</b> ${esc(it.q)}</p>
+        ${(it.options||[]).map((o,k)=>`<label class="opt ${f[p.id][i]===LET[k]?'sel':''}"><input type="radio" name="${h.id}-${p.id}-${i}" data-hw="${h.id}" data-p="${p.id}" data-i="${i}" value="${LET[k]}" ${f[p.id][i]===LET[k]?'checked':''}><span><b>${LET[k]}</b> ${esc(o)}</span></label>`).join('')}</div>`).join('');
+    }
+    if(p.type==='gaps'){
+      f[p.id]=f[p.id]||[];
+      return `<div class="part">${esc(title)}${p.hint?` <span class="muted" style="font-weight:400">· ${esc(p.hint)}</span>`:''}</div>`+(p.items||[]).map((it,i)=>{
+        const inp=`<input class="gap" data-hw="${h.id}" data-p="${p.id}" data-i="${i}" value="${esc(f[p.id][i]||'')}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Answer ${i+1}">`;
+        const s=esc(it.s||'___'); const has=s.includes('___');
+        return `<div class="q"><p class="qt"><b>${i+1}.</b> ${has?s.replace('___',inp):s+' '+inp}${it.hint?`<span class="hint">(${esc(it.hint)})</span>`:''}</p></div>`;
+      }).join('');
+    }
+    if(p.type==='writing'){
+      f[p.id]=f[p.id]||'';
+      return `<div class="part">${esc(title)}</div><div class="q"><p class="qt">${esc(p.prompt||'')}</p>
+        ${(p.expressions||[]).length?`<div class="chips">${p.expressions.map(e=>`<span class="pill blue">${esc(e)}</span>`).join('')}</div>`:''}
+        <textarea data-hw="${h.id}" data-p="${p.id}" data-w="1" placeholder="Write here…">${esc(f[p.id])}</textarea>
+        <p class="hint" id="wc-${h.id}-${p.id}">${wordsCount(f[p.id])} words${p.min_words?' · at least '+p.min_words:''}</p>
+        ${p.after?`<p class="muted">${esc(p.after)}</p>`:''}</div>`;
+    }
+    return '';
+  }).join('');
+  return html+`<p style="margin-top:14px"><button class="btn primary" data-submit="${h.id}">Check my homework</button> <span class="hint" id="msg-${h.id}"></span></p>`;
+}
+function hwResults(h){
+  const L=h.latest, det=L.detail||{parts:[]}, parts=(h.content&&h.content.parts)||[];
+  const pct=L.max?Math.round(100*L.score/L.max):0;
+  let out=`<div class="score"><b>${L.score} / ${L.max}</b><div><span class="pill ${pct>=80?'ok':pct>=50?'warn':'bad'}">${pct}%</span><div class="muted">${L.at?new Date(L.at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):''}</div></div></div>`;
+  if(L.comment) out+=`<div class="res"><b>Comment from Adriana</b><p>${esc(L.comment)}</p></div>`;
+  parts.forEach((p,pi)=>{
+    const d=(det.parts||[]).find(x=>x.id===p.id); if(!d) return;
+    out+=`<div class="part">${esc(p.title||'Part '+(pi+1))}</div>`;
+    if(p.type==='choice') (d.items||[]).forEach((r,i)=>{
+      const it=(p.items||[])[i]||{}, opts=it.options||[], gi=LET.indexOf(r.given||''), ci=LET.indexOf(r.correct||''), why=r.why||[];
+      out+=`<div class="res ${r.ok?'ok':'bad'}"><p><b>${i+1}. ${esc(it.q||'')}</b></p>`+
+        (r.ok?`<p>✓ ${esc(r.given)}. ${esc(opts[gi]||'')}</p>${why[ci]?`<p class="why">${esc(why[ci])}</p>`:''}`
+             :`<p>✗ Your answer: ${esc(r.given||'no answer')}${gi>=0?'. '+esc(opts[gi]||''):''}</p>${gi>=0&&why[gi]?`<p class="why">${esc(why[gi])}</p>`:''}<p>✓ Correct: ${esc(r.correct)}. ${esc(opts[ci]||'')}</p>${why[ci]?`<p class="why">${esc(why[ci])}</p>`:''}`)+`</div>`;
+    });
+    if(p.type==='gaps') (d.items||[]).forEach((r,i)=>{
+      const it=(p.items||[])[i]||{}, s=esc(it.s||'___').replace('___',`<b>${esc(r.given||'…')}</b>`);
+      out+=`<div class="res ${r.ok?'ok':'bad'}"><p>${r.ok?'✓':'✗'} <b>${i+1}.</b> ${s}</p>${r.ok?'':`<p class="why">Correct: ${esc((r.accepted||[]).join('  or  '))}</p>`}</div>`;
+    });
+    if(p.type==='writing'){ const r=(d.items||[])[0]||{}; out+=`<div class="res"><p>${r.words||0} words${r.min_words?' (minimum '+r.min_words+')':''} ${r.enough?'✓':'· a bit short'}</p><p class="why">Adriana reads your text and tells you about it in the lesson.</p></div>`; }
+  });
+  return out+`<p style="margin-top:14px"><button class="btn" data-retry="${h.id}">Do it again</button></p>`;
+}
+function viewHomework(){
+  const H=(data.homework||[]).slice().reverse();
+  if(!H.length) return '<div class="empty">No homework yet. After each lesson Adriana adds it here, and the tab shows a number when something is waiting.</div>';
+  return H.map(h=>{
+    const isOpen=openHw[h.id]!==undefined?openHw[h.id]:(!h.latest);
+    const status=h.latest?`<span class="pill ok">Score ${h.latest.score}/${h.latest.max}</span>`:'<span class="pill warn">To do</span>';
+    return `<div class="card"><div class="row"><div><b>${esc(h.title)}</b>${h.intro?`<div class="muted">${esc(h.intro)}</div>`:''}</div><span>${status} <button class="btn" data-toggle="${h.id}">${isOpen?'Close':(h.latest?'See results':'Open')}</button></span></div>
+      ${isOpen?`<div style="margin-top:8px">${(h.latest&&!retry[h.id])?hwResults(h):hwForm(h)}</div>`:''}</div>`;
+  }).join('');
+}
+async function submitHw(id){
+  const h=data.homework.find(x=>x.id===id), f=form[id]||{}, parts=(h.content&&h.content.parts)||[], answers={};
+  parts.forEach(p=>{
+    if(p.type==='choice') answers[p.id]=(p.items||[]).map((_,i)=>(f[p.id]||[])[i]||'');
+    else if(p.type==='gaps') answers[p.id]=(p.items||[]).map((_,i)=>(f[p.id]||[])[i]||'');
+    else if(p.type==='writing') answers[p.id]=f[p.id]||'';
+  });
+  const empty=parts.some(p=>(p.type==='choice'||p.type==='gaps')&&(p.items||[]).some((_,i)=>!(f[p.id]||[])[i]));
+  if(empty && !confirm('Some answers are empty. Check anyway?')) return;
+  const btn=$(`[data-submit="${id}"]`); btn.disabled=true; $('#msg-'+id).textContent='Checking…';
+  try{
+    const res=await rpc('student_submit_homework',{p_code:code,p_homework_id:id,p_answers:answers});
+    if(!res) throw new Error('rejected');
+    h.latest={score:res.score,max:res.max,at:new Date().toISOString(),detail:res,comment:null};
+    retry[id]=false; openHw[id]=true; form[id]={}; render();
+  }catch(e){ btn.disabled=false; $('#msg-'+id).textContent='Could not send. Check your internet and try again.'; }
+}
+
+/* ---------- words ---------- */
+function viewWords(){
+  const W=data.words||[];
+  if(!W.length) return '<div class="empty">Your new words will appear here after the lesson. Tap a card to see the translation, then tap "I know it".</div>';
+  const known=W.filter(w=>w.learned).length;
+  const groups={}; W.forEach(w=>{(groups[w.lesson_id||'x']=groups[w.lesson_id||'x']||[]).push(w);});
+  let out=`<div class="row" style="margin-bottom:6px"><span class="muted">${known} of ${W.length} words known</span><label><input type="checkbox" id="onlyNew" ${onlyNew?'checked':''}> Show only words I don't know yet</label></div>`;
+  Object.keys(groups).forEach(k=>{
+    const list=groups[k].filter(w=>!onlyNew||!w.learned); if(!list.length) return;
+    out+=`<div class="group">${esc(k==='x'?'Other words':lessonTitle(k)||'Lesson words')}</div><div class="cards">`+list.map(w=>`
+      <div class="wc ${w.learned?'known':''}"><div class="wc-in" role="button" tabindex="0" data-flip aria-label="${esc(w.term)}. Tap to flip."><div class="wf front"><b>${esc(w.term)}</b></div><div class="wf back"><b>${esc(w.uk||'')}</b>${w.example?`<small>${esc(w.example)}</small>`:''}</div></div>
+      <button class="know" data-know="${w.id}">${w.learned?'✓ I know it':'I know it'}</button></div>`).join('')+'</div>';
+  });
+  return out||'<div class="empty">You know all of them. Well done!</div>';
+}
+async function toggleKnow(id){
+  const w=data.words.find(x=>x.id===id); const to=!w.learned;
+  try{ const ok=await rpc('student_mark_word',{p_code:code,p_word_id:id,p_learned:to}); if(ok!==false){ w.learned=to; } }catch(e){}
+  render();
+}
+
+/* ---------- mistakes ---------- */
+function viewMistakes(){
+  const M=data.mistakes||[];
+  if(!M.length) return '<div class="empty">No mistakes noted yet. After each lesson, Adriana adds the main ones here, with the correct version.</div>';
+  const block=(title,list,cls)=>list.length?`<div class="card"><h2>${title}</h2>${list.map(m=>`<div class="mrow"><span class="said">${esc(m.said)}</span><span>→</span><span class="fixed">${esc(m.correct)}</span>${m.tag?`<span class="pill warn">${esc(m.tag)}</span>`:''}<span class="muted" style="margin-left:auto">${fmtDate(m.date)}</span></div>`).join('')}</div>`:'';
+  return block('Let\'s work on these',M.filter(m=>m.status!=='fixed'))+block('Fixed. Great!',M.filter(m=>m.status==='fixed'));
+}
+
+/* ---------- render and events ---------- */
+function render(){
+  renderTop();
+  const v={lessons:viewLessons,homework:viewHomework,words:viewWords,mistakes:viewMistakes}[tab];
+  $('#view').innerHTML=v();
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-tab]'); if(t){tab=t.dataset.tab;render();return;}
+  const tg=e.target.closest('[data-toggle]'); if(tg){const id=tg.dataset.toggle,h=data.homework.find(x=>x.id===id);openHw[id]=!(openHw[id]!==undefined?openHw[id]:!h.latest);render();return;}
+  const rt=e.target.closest('[data-retry]'); if(rt){retry[rt.dataset.retry]=true;form[rt.dataset.retry]={};render();return;}
+  const sb=e.target.closest('[data-submit]'); if(sb){submitHw(sb.dataset.submit);return;}
+  const kn=e.target.closest('[data-know]'); if(kn){toggleKnow(kn.dataset.know);return;}
+  const fl=e.target.closest('[data-flip]'); if(fl){fl.classList.toggle('on');return;}
+});
+document.addEventListener('keydown',e=>{const fl=e.target.closest&&e.target.closest('[data-flip]');if(fl&&(e.key==='Enter'||e.key===' ')){e.preventDefault();fl.classList.toggle('on');}});
+document.addEventListener('change',e=>{
+  if(e.target.id==='onlyNew'){onlyNew=e.target.checked;render();return;}
+  const el=e.target; if(el.type==='radio'&&el.dataset.hw){const f=form[el.dataset.hw]=form[el.dataset.hw]||{};(f[el.dataset.p]=f[el.dataset.p]||[])[+el.dataset.i]=el.value;$$(`input[name="${el.name}"]`).forEach(r=>r.closest('.opt').classList.toggle('sel',r.checked));}
+});
+document.addEventListener('input',e=>{
+  const el=e.target; if(!el.dataset||!el.dataset.hw||el.type==='radio') return;
+  const f=form[el.dataset.hw]=form[el.dataset.hw]||{};
+  if(el.dataset.w){f[el.dataset.p]=el.value;const c=$('#wc-'+el.dataset.hw+'-'+el.dataset.p);if(c){const h=data.homework.find(x=>x.id===el.dataset.hw),p=h.content.parts.find(x=>x.id===el.dataset.p);c.textContent=wordsCount(el.value)+' words'+(p&&p.min_words?' · at least '+p.min_words:'');}}
+  else (f[el.dataset.p]=f[el.dataset.p]||[])[+el.dataset.i]=el.value;
+});
+
+/* ---------- demo data (only with ?demo=1) ---------- */
+const DEMO_DATA={student:{name:'Olga',level:'B1',goal:'Feel confident in English and be ready for the conference day',deadline:'2027-01-15'},
+ lessons:[{id:'l1',title:'The Perfect Match? Present simple vs continuous',date:'2026-11-03',status:'done'},{id:'l2',title:'My weekend: past simple and past continuous',date:'2026-11-10',status:'done'},{id:'l3',title:'Money talk: present perfect',date:'2026-11-17',status:'planned'}],
+ words:[['grab a bite','перекусити','Shall we grab a bite?','l1',true],['be into something','захоплюватися чимось','I\'m really into cooking.','l1',true],['eat out','їсти поза домом','I don\'t eat out much.','l1',false],['picky eater','вибагливий в їжі','I\'m not a picky eater.','l1',false],['meet a deadline','вкластися в дедлайн','We must meet a deadline.','l1',true],['figure something out','розібратися','I\'m trying to figure out why.','l1',false],['get carried away','захопитися','Sorry, I get carried away.','l1',false],['in charge of','відповідати за','I\'m in charge of the project.','l1',true]].map((w,i)=>({id:'w'+i,term:w[0],uk:w[1],example:w[2],lesson_id:w[3],learned:w[4]})),
+ mistakes:[{said:'She don\'t eat meat.',correct:'She doesn\'t eat meat.',status:'still happening',date:'2026-11-03'},{said:'I am usually cooking at home.',correct:'I usually cook at home.',status:'still happening',date:'2026-11-03'},{said:'What does she working on?',correct:'What is she working on?',status:'fixed',date:'2026-11-03'}],
+ homework:[
+  {id:'h1',title:'Homework 1: habits and now',intro:'About 10 minutes. Do it before our next lesson.',latest:null,content:{parts:[
+    {id:'p1',type:'choice',title:'Part 1. Choose the answer',items:[
+      {q:'She ___ in IT.',options:['work','works','is working']},
+      {q:'Right now he ___ dinner.',options:['cooks','is cooking','cook']},
+      {q:'___ you like pasta?',options:['Do','Are','Does']}]},
+    {id:'p2',type:'gaps',title:'Part 2. Fill the gap',items:[{s:'She ___ on Fridays.',hint:'not / work'},{s:'___ she working today?',hint:'be'}]},
+    {id:'p3',type:'writing',title:'Part 3. Write',prompt:'What do you usually do at the weekend? What are you doing this weekend?',expressions:['usually','this weekend','at the moment','I\'m going to'],min_words:30,after:'First write, then tell me about it in our next lesson.'}]}},
+  {id:'h0',title:'Homework 0: warm-up',intro:'Done last week.',latest:{score:6,max:8,at:'2026-11-05T10:00:00Z',comment:'Good work! Watch does + verb without -s.',detail:{score:6,max:8,parts:[{id:'p1',type:'choice',items:[{i:0,given:'A',correct:'B',ok:false,why:['Needs -s after she.','Right: habit, she takes -s.','Is working is for now.']},{i:1,given:'B',correct:'B',ok:true,why:['Habit, not now.','Right: now = is + -ing.','No -s after he.']}]},{id:'p2',type:'gaps',items:[{i:0,given:'doesn\'t work',accepted:['doesn\'t work','does not work'],ok:true},{i:1,given:'Does',accepted:['Is'],ok:false}]}]}},content:{parts:[
+    {id:'p1',type:'choice',title:'Part 1',items:[{q:'She ___ in IT.',options:['work','works','is working']},{q:'Right now he ___ dinner.',options:['cooks','is cooking','cook']}]},
+    {id:'p2',type:'gaps',title:'Part 2',items:[{s:'She ___ on Fridays.'},{s:'___ she working today?'}]}]}}
+ ]};
+DEMO_DATA.homework.reverse();
+const DEMO_KEY={h1:{p1:['B','B','A'],p2:[["doesn't work","does not work"],['Is']]}};
+function demoRpc(fn,b){
+  if(fn==='student_view') return Promise.resolve(JSON.parse(JSON.stringify(DEMO_DATA)));
+  if(fn==='student_mark_word') return Promise.resolve(true);
+  if(fn==='student_submit_homework'){
+    const h=DEMO_DATA.homework.find(x=>x.id===b.p_homework_id), key=DEMO_KEY[h.id]||{}; let score=0,max=0; const parts=[];
+    h.content.parts.forEach(p=>{
+      if(p.type==='choice'){const items=p.items.map((it,i)=>{const ok=(b.p_answers[p.id][i]||'')===key[p.id][i];max++;if(ok)score++;return {i,given:b.p_answers[p.id][i],correct:key[p.id][i],ok,why:['Not this one. Look at who does the action and when.','This one fits the meaning.','Not this one. Check the verb form.']};});parts.push({id:p.id,type:p.type,items});}
+      else if(p.type==='gaps'){const items=p.items.map((it,i)=>{const acc=key[p.id][i],ok=acc.some(a=>norm(a)===norm(b.p_answers[p.id][i]));max++;if(ok)score++;return {i,given:b.p_answers[p.id][i],accepted:acc,ok};});parts.push({id:p.id,type:p.type,items});}
+      else parts.push({id:p.id,type:p.type,items:[{words:wordsCount(b.p_answers[p.id]),min_words:p.min_words,enough:wordsCount(b.p_answers[p.id])>=p.min_words,needs_teacher:true}]});
+    });
+    return Promise.resolve({score,max,parts});
+  }
+}
+if(DEMO){ $('#demoBanner').hidden=false; document.title='My English (demo)'; }
+load();
+</script>
+</body>
+</html>
