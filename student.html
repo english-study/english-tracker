@@ -86,7 +86,13 @@ textarea{width:100%;min-height:130px;font:inherit;color:var(--ink);background:va
 .wc.known .wf.front{background:var(--ok-soft);border-color:var(--ok)}
 .wc .know{margin-top:6px;width:100%;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:5px 8px;font-size:.88rem}
 .wc.known .know{background:var(--ok);border-color:var(--ok);color:#fff}
-.group{margin:18px 0 8px;font-weight:700}
+.folder{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;padding:0 16px}
+.folder>summary{cursor:pointer;list-style:none;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:14px 0;font-weight:700}
+.folder>summary::-webkit-details-marker{display:none}
+.folder>summary::before{content:"\25B8";transition:transform .2s;color:var(--muted)}
+.folder[open]>summary::before{transform:rotate(90deg)}
+.folder .ft{flex:1}
+.folder .cards{padding:2px 0 16px}
 /* mistakes */
 .mrow{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline;padding:10px 0;border-top:1px solid var(--line)}
 .mrow:first-child{border-top:0}
@@ -272,20 +278,28 @@ async function submitHw(id){
 }
 
 /* ---------- words ---------- */
+const openFolders={};
 function viewWords(){
   const W=data.words||[];
-  if(!W.length) return '<div class="empty">Your new words will appear here after the lesson. Tap a card to see the translation, then tap "I know it".</div>';
+  if(!W.length) return '<div class="empty">Your new words will appear here after the lesson, in a folder for each lesson. Tap a card to see the translation, then tap "I know it".</div>';
   const known=W.filter(w=>w.learned).length;
-  const groups={}; W.forEach(w=>{(groups[w.lesson_id||'x']=groups[w.lesson_id||'x']||[]).push(w);});
-  let out=`<div class="row" style="margin-bottom:6px"><span class="muted">${known} of ${W.length} words known</span><label><input type="checkbox" id="onlyNew" ${onlyNew?'checked':''}> Show only words I don't know yet</label></div>`;
-  Object.keys(groups).forEach(k=>{
-    const list=groups[k].filter(w=>!onlyNew||!w.learned); if(!list.length) return;
-    out+=`<div class="group">${esc(k==='x'?'Other words':lessonTitle(k)||'Lesson words')}</div><div class="cards">`+list.map(w=>`
+  const L=(data.lessons||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')), num={};
+  L.forEach((l,i)=>{num[l.id]=i+1;});
+  const groups={}; W.forEach(w=>{const k=(w.lesson_id&&num[w.lesson_id])?w.lesson_id:'x';(groups[k]=groups[k]||[]).push(w);});
+  const order=L.map(l=>l.id).reverse().filter(id=>groups[id]).concat(groups.x?['x']:[]);
+  let out=`<div class="row" style="margin-bottom:10px"><span class="muted">${known} of ${W.length} words known</span><label><input type="checkbox" id="onlyNew" ${onlyNew?'checked':''}> Show only words I don't know yet</label></div>`, shown=0;
+  order.forEach((k,idx)=>{
+    const all=groups[k], list=all.filter(w=>!onlyNew||!w.learned), kn=all.filter(w=>w.learned).length;
+    if(!list.length) return; shown++;
+    const isOpen=openFolders[k]!==undefined?openFolders[k]:idx===0;
+    const title=k==='x'?'Other words':'Lesson '+num[k]+': '+lessonTitle(k);
+    out+=`<details class="folder" data-folder="${esc(k)}" ${isOpen?'open':''}><summary><span class="ft">${esc(title)}</span><span class="pill ${kn===all.length?'ok':''}">${kn} / ${all.length} known</span></summary><div class="cards">`+list.map(w=>`
       <div class="wc ${w.learned?'known':''}"><div class="wc-in" role="button" tabindex="0" data-flip aria-label="${esc(w.term)}. Tap to flip."><div class="wf front"><b>${esc(w.term)}</b></div><div class="wf back"><b>${esc(w.uk||'')}</b>${w.example?`<small>${esc(w.example)}</small>`:''}</div></div>
-      <button class="know" data-know="${w.id}">${w.learned?'✓ I know it':'I know it'}</button></div>`).join('')+'</div>';
+      <button class="know" data-know="${w.id}">${w.learned?'✓ I know it':'I know it'}</button></div>`).join('')+'</div></details>';
   });
-  return out||'<div class="empty">You know all of them. Well done!</div>';
+  return shown?out:out+'<div class="empty">You know all of them. Well done!</div>';
 }
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.folder!==undefined)openFolders[d.dataset.folder]=d.open;},true);
 async function toggleKnow(id){
   const w=data.words.find(x=>x.id===id); const to=!w.learned;
   try{ const ok=await rpc('student_mark_word',{p_code:code,p_word_id:id,p_learned:to}); if(ok!==false){ w.learned=to; } }catch(e){}
@@ -329,7 +343,7 @@ document.addEventListener('input',e=>{
 /* ---------- demo data (only with ?demo=1) ---------- */
 const DEMO_DATA={student:{name:'Olga',level:'B1',goal:'Feel confident in English and be ready for the conference day',deadline:'2027-01-15'},
  lessons:[{id:'l1',title:'The Perfect Match? Present simple vs continuous',date:'2026-11-03',status:'done'},{id:'l2',title:'My weekend: past simple and past continuous',date:'2026-11-10',status:'done'},{id:'l3',title:'Money talk: present perfect',date:'2026-11-17',status:'planned'}],
- words:[['grab a bite','перекусити','Shall we grab a bite?','l1',true],['be into something','захоплюватися чимось','I\'m really into cooking.','l1',true],['eat out','їсти поза домом','I don\'t eat out much.','l1',false],['picky eater','вибагливий в їжі','I\'m not a picky eater.','l1',false],['meet a deadline','вкластися в дедлайн','We must meet a deadline.','l1',true],['figure something out','розібратися','I\'m trying to figure out why.','l1',false],['get carried away','захопитися','Sorry, I get carried away.','l1',false],['in charge of','відповідати за','I\'m in charge of the project.','l1',true]].map((w,i)=>({id:'w'+i,term:w[0],uk:w[1],example:w[2],lesson_id:w[3],learned:w[4]})),
+ words:[['grab a bite','перекусити','Shall we grab a bite?','l1',true],['be into something','захоплюватися чимось','I\'m really into cooking.','l1',true],['eat out','їсти поза домом','I don\'t eat out much.','l1',false],['picky eater','вибагливий в їжі','I\'m not a picky eater.','l1',false],['meet a deadline','вкластися в дедлайн','We must meet a deadline.','l1',true],['figure something out','розібратися','I\'m trying to figure out why.','l1',false],['get carried away','захопитися','Sorry, I get carried away.','l1',false],['in charge of','відповідати за','I\'m in charge of the project.','l1',true],['to hang out','проводити час з друзями','We hung out all Saturday.','l2',true],['to catch up','надолужити, поговорити після довгої перерви','Let\'s catch up this week.','l2',false],['to be worn out','бути виснаженим','I was worn out after the trip.','l2',false]].map((w,i)=>({id:'w'+i,term:w[0],uk:w[1],example:w[2],lesson_id:w[3],learned:w[4]})),
  mistakes:[{said:'She don\'t eat meat.',correct:'She doesn\'t eat meat.',status:'still happening',date:'2026-11-03'},{said:'I am usually cooking at home.',correct:'I usually cook at home.',status:'still happening',date:'2026-11-03'},{said:'What does she working on?',correct:'What is she working on?',status:'fixed',date:'2026-11-03'}],
  homework:[
   {id:'h1',title:'Homework 1: habits and now',intro:'About 10 minutes. Do it before our next lesson.',latest:null,content:{parts:[
