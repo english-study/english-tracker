@@ -161,7 +161,8 @@ const lessonTitle=id=>{const l=(data.lessons||[]).find(l=>l.id===id);return l?l.
 function renderTop(){
   const st=data.student||{};
   $('#hello').textContent='Hi, '+(st.name||'')+'!';
-  $('#sub').textContent=[st.level?'Level '+st.level:'',st.goal||''].filter(Boolean).join(' · ');
+  const goals=(st.goal||'').split(/[;\n]+/).map(s=>s.trim()).filter(Boolean).map(s=>s.charAt(0).toUpperCase()+s.slice(1));
+  $('#sub').innerHTML=goals.length?'My goals:<br>'+goals.map(g=>'• '+esc(g)).join('<br>'):'';
   if(st.deadline){
     const days=Math.ceil((new Date(st.deadline+'T00:00:00')-new Date(new Date().toDateString()))/86400000);
     if(days>=0){ $('#days').textContent=days; $('#daysLbl').textContent='days to '+fmtDate(st.deadline); $('#count').hidden=false; } else $('#count').hidden=true;
