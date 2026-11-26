@@ -134,7 +134,7 @@ body.student:not(.mine) #viewBtn{display:none}
 .mm .mopt.bad{border-color:#c0392b;background:#fdecea}
 .drill{background:var(--bg);border-radius:14px;padding:14px 16px;margin:0 0 10px}
 .drill p{font-size:1.12rem;margin:0 0 8px;line-height:1.6}
-.drill input.gap{font:inherit;border:0;border-bottom:2px solid var(--brand);background:transparent;padding:2px 6px;min-width:7em;text-align:center}
+.drill input.gap{font:inherit;border:0;border-bottom:2px solid var(--brand);background:transparent;padding:2px 6px;width:auto;display:inline-block;min-width:7em;max-width:14em;text-align:center}
 .drill input.gap.ok{border-bottom-color:var(--ok)}
 .drill input.gap.bad{border-bottom-color:#c0392b}
 .drill .row2{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
@@ -273,11 +273,11 @@ const MINI=[
   rule:['Add -s to the verb after he, she and it.','Після he, she, it до дієслова додаємо -s.'],
   text:'Anna lives in Lviv. She <i class="m" data-f="works">work</i> in a shop. On Saturday she <i class="m" data-f="gets up">get up</i> at nine. She likes coffee. On Sunday she <i class="m" data-f="doesn’t go">don’t go</i> to work.',
   words:[
-   {w:'shop',en:'a place where people buy things',ua:'магазин'},
    {w:'get up',en:'to leave your bed in the morning',ua:'прокидатися, вставати'},
-   {w:'weekend',en:'Saturday and Sunday',ua:'вихідні'},
    {w:'sometimes',en:'not often, not always',ua:'іноді'},
-   {w:'coffee',en:'a hot drink many people have in the morning',ua:'кава'}
+   {w:'usually',en:'most of the time, almost always',ua:'зазвичай'},
+   {w:'early',en:'before the usual time',ua:'рано'},
+   {w:'day off',en:'a day when you don’t work',ua:'вихідний день'}
   ],
   drill:[
    {s:'My sister ___ at a bank.',base:'work',ans:'works'},
@@ -286,7 +286,7 @@ const MINI=[
   ],
   speak:[
    ['What time do you get up on Saturday?','О котрій годині ти встаєш у суботу?'],
-   ['Do you work in a shop, like Anna?','Ти працюєш у магазині, як Анна?'],
+   ['Anna works in a shop. What do you do for work?','Анна працює в магазині. А ким працюєш ти?'],
    ['What do you usually drink in the morning - tea or coffee?','Що ти зазвичай п’єш уранці - чай чи каву?']
   ]},
  {topic:['Past simple (regular and irregular verbs)','Минулий простий (правильні та неправильні дієслова)'],
@@ -294,10 +294,10 @@ const MINI=[
   text:'Max graduated from university in 2019. After that he worked as an administrator for one year. He <i class="m" data-f="didn’t like">didn’t liked</i> the work, so he <i class="m" data-f="started">start</i> to learn Linux in the evenings. Then he <i class="m" data-f="got">get</i> a job in an IT company.',
   words:[
    {w:'graduate from',en:'to finish your studies at a university',ua:'закінчити (університет)'},
-   {w:'administrator',en:'a person who manages office work',ua:'адміністратор'},
-   {w:'after that',en:'next, following this',ua:'після цього'},
-   {w:'get a job',en:'to start working somewhere new',ua:'отримати роботу'},
-   {w:'in the evenings',en:'during the evening, regularly',ua:'вечорами'}
+   {w:'challenging',en:'difficult, but in a way that is interesting',ua:'складний, але цікавий виклик'},
+   {w:'skill',en:'the ability to do something well, usually learned with practice',ua:'навичка'},
+   {w:'improve',en:'to become better, or to make something better',ua:'покращувати(ся)'},
+   {w:'achieve',en:'to succeed in doing something after effort',ua:'досягати'}
   ],
   drill:[
    {s:'She ___ from university last year.',base:'graduate',ans:'graduated'},
@@ -307,7 +307,7 @@ const MINI=[
   speak:[
    ['Have you ever started learning something completely new, like Max did with Linux? What was it?','Ти колись починав(ла) вивчати щось зовсім нове, як Макс з Linux? Що це було?'],
    ['What does work-life balance mean to you?','Що для тебе означає баланс між роботою і особистим життям?'],
-   ['If you could change your job tomorrow, what would you choose - and why?','Якби ти міг(могла) змінити роботу завтра, що б ти обрав(ла) - і чому?']
+   ['If you could learn one new skill this year, what would it be - and why?','Якби ти міг(могла) опанувати одну нову навичку цього року, яку б ти обрав(ла) - і чому?']
   ]},
  {topic:['Third conditional','Третя умовна форма'],
   rule:['Third conditional: if + had + past participle, would have + past participle.','Third conditional: if + had + дієприкметник, would have + дієприкметник.'],
@@ -315,7 +315,7 @@ const MINI=[
   words:[
    {w:'meet a deadline',en:'to finish something by the required date',ua:'дотриматися дедлайну'},
    {w:'crash',en:'to suddenly stop working (for a computer)',ua:'збій, зависання'},
-   {w:'save a file',en:'to keep your work on a computer so it isn’t lost',ua:'зберегти файл'},
+   {w:'backup',en:'an extra copy of your files, kept in case something goes wrong',ua:'резервна копія'},
    {w:'damage',en:'harm or a negative effect',ua:'шкода'},
    {w:'luckily',en:'fortunately, by good luck',ua:'на щастя'}
   ],
@@ -327,7 +327,7 @@ const MINI=[
   speak:[
    ['What does it mean to be truly happy in your work, in modern society?','Що означає бути по-справжньому щасливим(ою) у своїй роботі в сучасному суспільстві?'],
    ['Have you ever made a mistake at work that taught you something valuable? What happened?','Ти колись робив(ла) помилку на роботі, яка навчила тебе чогось важливого? Що сталося?'],
-   ['If you could go back and redo one decision in your career, what would it be?','Якби ти міг(могла) повернутися назад і змінити одне рішення у своїй кар’єрі, яким би воно було?']
+   ['If you could start doing something completely new today, what would it be - and why?','Якби ти міг(могла) почати робити щось зовсім нове вже сьогодні, що б це було - і чому?']
   ]}
 ];
 const SKILLS=['grammar','vocabulary','speaking','pronunciation','listening'];
@@ -413,7 +413,7 @@ function miniHtml(){
      <div class="t-only" style="margin-top:14px"><button class="btn" id="rv" type="button">${esc(S.mini.reveal?U('hide'):U('show'))}</button></div></div>`;
   }else if(st===2){
     body=mi.drill.map((d,i)=>{const parts=d.s.split('___');
-      return `<div class="drill" data-d="${i}"><p>${esc(parts[0])}<input class="gap" data-i="${i}" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">${esc(parts[1]||'')} <span class="hint">(${esc(d.base)})</span></p>
+      return `<div class="drill" data-d="${i}"><p>${esc(parts[0])}<input class="gap" data-i="${i}" autocomplete="off" autocapitalize="off" spellcheck="false">${esc(parts[1]||'')} <span class="hint">(${esc(d.base)})</span></p>
        <div class="row2"><button class="btn" data-check="${i}" type="button">${esc(U('check'))}</button><button class="btn" data-show="${i}" type="button">${esc(U('showAns'))}</button><span class="res" id="dres${i}"></span></div></div>`;
     }).join('');
   }else if(st===3){
