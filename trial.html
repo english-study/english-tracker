@@ -408,9 +408,11 @@ function miniHtml(){
   }else if(st===1){
     const txt=mi.text.replace(/<i class="m" data-f="([^"]*)">([^<]*)<\/i>/g,(a,f,w)=>`<i class="m" data-f="${f}">${w}</i><span class="fix"> → ${f}</span>`);
     body=`<div id="miniBox" class="${S.mini.reveal?'rv':''}"><div class="text">${txt}</div>
-     <div class="hint" style="margin-top:10px;font-weight:600">${esc(L(mi.topic[0],mi.topic[1]))}</div>
-     <div class="rule">${esc(U('rule'))}: ${esc(L(mi.rule[0],mi.rule[1]))}</div>
-     <div class="t-only" style="margin-top:14px"><button class="btn" id="rv" type="button">${esc(S.mini.reveal?U('hide'):U('show'))}</button></div></div>`;
+     <div class="t-only" style="margin-top:14px">
+       <p class="hint" style="font-weight:600">${esc(L(mi.topic[0],mi.topic[1]))}</p>
+       <div class="rule">${esc(U('rule'))}: ${esc(L(mi.rule[0],mi.rule[1]))}</div>
+       <button class="btn" style="margin-top:10px" id="rv" type="button">${esc(S.mini.reveal?U('hide'):U('show'))}</button>
+     </div></div>`;
   }else if(st===2){
     body=mi.drill.map((d,i)=>{const parts=d.s.split('___');
       return `<div class="drill" data-d="${i}"><p>${esc(parts[0])}<input class="gap" data-i="${i}" autocomplete="off" autocapitalize="off" spellcheck="false">${esc(parts[1]||'')} <span class="hint">(${esc(d.base)})</span></p>
