@@ -122,6 +122,28 @@ body.student:not(.mine) #viewBtn{display:none}
 .words span{background:var(--bg-c);color:#1d2330;border-radius:12px;padding:6px 12px;font-weight:600}
 .words small{display:block;font-weight:400;font-size:.78rem;color:#3d4556}
 
+/* mini-lesson: words (matching), text+mistakes, drill, speak - four sub-stages inside one node */
+.ministeps{display:flex;gap:6px;margin:0 0 14px}
+.ministeps i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.ministeps i.on{background:var(--brand)}
+.mm{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 6px}
+.mm .mcol{display:grid;gap:8px;align-content:start;min-width:0}
+.mm .mopt{text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;font-size:.98rem;min-width:0}
+.mm .mopt[aria-pressed="true"]{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 14%,var(--surface))}
+.mm .mopt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--surface))}
+.mm .mopt.bad{border-color:#c0392b;background:#fdecea}
+.drill{background:var(--bg);border-radius:14px;padding:14px 16px;margin:0 0 10px}
+.drill p{font-size:1.12rem;margin:0 0 8px;line-height:1.6}
+.drill input.gap{font:inherit;border:0;border-bottom:2px solid var(--brand);background:transparent;padding:2px 6px;min-width:7em;text-align:center}
+.drill input.gap.ok{border-bottom-color:var(--ok)}
+.drill input.gap.bad{border-bottom-color:#c0392b}
+.drill .row2{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.drill .res{font-size:.86rem;font-weight:600}
+.speakq{font-size:1.15rem;line-height:1.6;padding:12px 0;border-bottom:1px solid var(--line)}
+.speakq:last-child{border-bottom:0}
+.mininav{display:flex;justify-content:space-between;margin-top:18px}
+@media (max-width:700px){.mm{grid-template-columns:1fr}}
+
 /* summary */
 .sum{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .card{background:var(--surface);border:1.5px solid var(--line);border-radius:18px;padding:16px 18px;min-width:0}
@@ -200,7 +222,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const MODE=(location.hash==='#student')?'student':'teacher';
 let ch=null;try{ch=new BroadcastChannel('english-map-trial');}catch(e){}
 const KEY='english-map-trial-v2';
-const fresh=()=>({flip:{},lang:'en',level:1,name:'',goal:'',why:'',deadline:'',where:[],whereText:'',exp:'',perWeek:'',days:'',hw:'',topics:{},task:{notes:''},mini:{reveal:false},cefr:'',skills:{},errors:[],plan:'',notes:''});
+const fresh=()=>({flip:{},lang:'en',level:1,name:'',goal:'',why:'',deadline:'',where:[],whereText:'',exp:'',perWeek:'',days:'',hw:'',topics:{},task:{notes:''},mini:{reveal:false,stage:0,done:false},cefr:'',skills:{},errors:[],plan:'',notes:''});
 let S=fresh();
 try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}
 let view='map';
@@ -247,12 +269,74 @@ const TASK=[
  ['What has changed in your city or in your job in the last 5 years? Is it better or worse? Why?','Що змінилося у твоєму місті або на твоїй роботі за останні 5 років? Це на краще чи на гірше? Чому?','']
 ];
 const MINI=[
- {rule:['Add -s to the verb after he, she and it.','Після he, she, it до дієслова додаємо -s.'],text:'Anna lives in Lviv. She <i class="m" data-f="works">work</i> in a shop. On Saturday she <i class="m" data-f="gets up">get up</i> at nine. She likes coffee. On Sunday she <i class="m" data-f="doesn’t go">don’t go</i> to work.',words:[['shop','магазин'],['get up','прокидатися'],['weekend','вихідні'],['sometimes','іноді'],['coffee','кава']]},
- {rule:['Past simple: after didn’t the verb stays in the base form. Get is irregular: get, got.','Past simple: після didn’t дієслово в початковій формі. Get - неправильне: get, got.'],text:'Max graduated from university in 2019. After that he worked as an administrator for one year. He <i class="m" data-f="didn’t like">didn’t liked</i> the work, so he <i class="m" data-f="started">start</i> to learn Linux in the evenings. Then he <i class="m" data-f="got">get</i> a job in an IT company.',words:[['graduate from','закінчити (університет)'],['administrator','адміністратор'],['after that','після цього'],['get a job','отримати роботу'],['in the evenings','вечорами']]},
- {rule:['Third conditional: if + had + past participle, would have + past participle.','Third conditional: if + had + дієприкметник, would have + дієприкметник.'],text:'<i class="m" data-f="If I had known">If I would have known</i> about the deadline, I would have started earlier. I was working on the project when my laptop crashed, so I <i class="m" data-f="lost">have lost</i> two days of work. Luckily I had saved most of the files, so it wasn’t as bad as it <i class="m" data-f="could have been">could been</i>.',words:[['meet a deadline','дотриматися дедлайну'],['crash','збій, зависання'],['save a file','зберегти файл'],['damage','шкода'],['luckily','на щастя']]}
+ {topic:['Present simple (he, she, it)','Теперішній простий (he, she, it)'],
+  rule:['Add -s to the verb after he, she and it.','Після he, she, it до дієслова додаємо -s.'],
+  text:'Anna lives in Lviv. She <i class="m" data-f="works">work</i> in a shop. On Saturday she <i class="m" data-f="gets up">get up</i> at nine. She likes coffee. On Sunday she <i class="m" data-f="doesn’t go">don’t go</i> to work.',
+  words:[
+   {w:'shop',en:'a place where people buy things',ua:'магазин'},
+   {w:'get up',en:'to leave your bed in the morning',ua:'прокидатися, вставати'},
+   {w:'weekend',en:'Saturday and Sunday',ua:'вихідні'},
+   {w:'sometimes',en:'not often, not always',ua:'іноді'},
+   {w:'coffee',en:'a hot drink many people have in the morning',ua:'кава'}
+  ],
+  drill:[
+   {s:'My sister ___ at a bank.',base:'work',ans:'works'},
+   {s:'He always ___ late on Sunday.',base:'get up',ans:'gets up'},
+   {s:'Our cat ___ a lot during the day.',base:'sleep',ans:'sleeps'}
+  ],
+  speak:[
+   ['What time do you get up on Saturday?','О котрій годині ти встаєш у суботу?'],
+   ['Do you work in a shop, like Anna?','Ти працюєш у магазині, як Анна?'],
+   ['What do you usually drink in the morning - tea or coffee?','Що ти зазвичай п’єш уранці - чай чи каву?']
+  ]},
+ {topic:['Past simple (regular and irregular verbs)','Минулий простий (правильні та неправильні дієслова)'],
+  rule:['Past simple: after didn’t the verb stays in the base form. Get is irregular: get, got.','Past simple: після didn’t дієслово в початковій формі. Get - неправильне: get, got.'],
+  text:'Max graduated from university in 2019. After that he worked as an administrator for one year. He <i class="m" data-f="didn’t like">didn’t liked</i> the work, so he <i class="m" data-f="started">start</i> to learn Linux in the evenings. Then he <i class="m" data-f="got">get</i> a job in an IT company.',
+  words:[
+   {w:'graduate from',en:'to finish your studies at a university',ua:'закінчити (університет)'},
+   {w:'administrator',en:'a person who manages office work',ua:'адміністратор'},
+   {w:'after that',en:'next, following this',ua:'після цього'},
+   {w:'get a job',en:'to start working somewhere new',ua:'отримати роботу'},
+   {w:'in the evenings',en:'during the evening, regularly',ua:'вечорами'}
+  ],
+  drill:[
+   {s:'She ___ from university last year.',base:'graduate',ans:'graduated'},
+   {s:'They ___ a new flat in the city centre.',base:'get',ans:'got'},
+   {s:'He ___ to learn Spanish last spring.',base:'start',ans:'started'}
+  ],
+  speak:[
+   ['Have you ever started learning something completely new, like Max did with Linux? What was it?','Ти колись починав(ла) вивчати щось зовсім нове, як Макс з Linux? Що це було?'],
+   ['What does work-life balance mean to you?','Що для тебе означає баланс між роботою і особистим життям?'],
+   ['If you could change your job tomorrow, what would you choose - and why?','Якби ти міг(могла) змінити роботу завтра, що б ти обрав(ла) - і чому?']
+  ]},
+ {topic:['Third conditional','Третя умовна форма'],
+  rule:['Third conditional: if + had + past participle, would have + past participle.','Third conditional: if + had + дієприкметник, would have + дієприкметник.'],
+  text:'<i class="m" data-f="If I had known">If I would have known</i> about the deadline, I would have started earlier. I was working on the project when my laptop crashed, so I <i class="m" data-f="lost">have lost</i> two days of work. Luckily I had saved most of the files, so it wasn’t as bad as it <i class="m" data-f="could have been">could been</i>.',
+  words:[
+   {w:'meet a deadline',en:'to finish something by the required date',ua:'дотриматися дедлайну'},
+   {w:'crash',en:'to suddenly stop working (for a computer)',ua:'збій, зависання'},
+   {w:'save a file',en:'to keep your work on a computer so it isn’t lost',ua:'зберегти файл'},
+   {w:'damage',en:'harm or a negative effect',ua:'шкода'},
+   {w:'luckily',en:'fortunately, by good luck',ua:'на щастя'}
+  ],
+  drill:[
+   {s:'If she ___ earlier, she wouldn’t have missed the bus.',base:'leave',ans:'had left'},
+   {s:'If I ___ about the deadline, I would have started earlier.',base:'know',ans:'had known'},
+   {s:'They wouldn’t have been late if they ___ a taxi.',base:'take',ans:'had taken'}
+  ],
+  speak:[
+   ['What does it mean to be truly happy in your work, in modern society?','Що означає бути по-справжньому щасливим(ою) у своїй роботі в сучасному суспільстві?'],
+   ['Have you ever made a mistake at work that taught you something valuable? What happened?','Ти колись робив(ла) помилку на роботі, яка навчила тебе чогось важливого? Що сталося?'],
+   ['If you could go back and redo one decision in your career, what would it be?','Якби ти міг(могла) повернутися назад і змінити одне рішення у своїй кар’єрі, яким би воно було?']
+  ]}
 ];
 const SKILLS=['grammar','vocabulary','speaking','pronunciation','listening'];
-const UI={back:['Back to map','Назад до мапи'],tap:['tap to open','натисни'],flipHint:['tap to flip','перевернути'],show:['Show corrections','Показати виправлення'],hide:['Hide corrections','Сховати виправлення'],rule:['Rule','Правило'],of:['of','з'],done:['done','готово'],recap:['Show my English map','Показати мою мапу'],find:['Find 3 mistakes in the text. What is the rule?','Знайди 3 помилки в тексті. Яке правило?'],pickCard:['Pick a card and flip it. Answer the question.','Обери картку і переверни її. Дай відповідь на запитання.'],more:['Tell me more','Розкажи більше']};
+const UI={back:['Back to map','Назад до мапи'],tap:['tap to open','натисни'],flipHint:['tap to flip','перевернути'],show:['Show corrections','Показати виправлення'],hide:['Hide corrections','Сховати виправлення'],rule:['Rule','Правило'],of:['of','з'],done:['done','готово'],recap:['Show my English map','Показати мою мапу'],find:['Find 3 mistakes in the text. What is the rule?','Знайди 3 помилки в тексті. Яке правило?'],pickCard:['Pick a card and flip it. Answer the question.','Обери картку і переверни її. Дай відповідь на запитання.'],more:['Tell me more','Розкажи більше'],
+ wTitle:['Let’s learn a few words first.','Спочатку вивчимо кілька слів.'],wInstr:['Match each word with its meaning.','Зістав кожне слово з його значенням.'],
+ dTitle:['Now let’s practise the grammar.','Тепер попрактикуємо граматику.'],dInstr:['Fill in the gaps with the correct form.','Заповни пропуски правильною формою.'],
+ sTitle:['Let’s talk about it.','Поговорімо про це.'],
+ next:['Next','Далі'],prev:['Back','Назад'],finish:['Finish','Завершити'],
+ check:['Check','Перевірити'],showAns:['Show answer','Показати відповідь'],correct:['Correct!','Правильно!'],tryAgain:['Not yet - try again.','Ще ні - спробуй ще раз.']};
 const U=k=>L(UI[k][0],UI[k][1]);
 
 function filled(id){
@@ -260,7 +344,7 @@ function filled(id){
     case 'goal':return !!S.goal;case 'why':return !!(S.why||S.deadline);case 'where':return !!(S.where.length||S.whereText);
     case 'exp':return !!S.exp;case 'time':return !!(S.perWeek||S.days);
     case 'topics':return Object.values(S.topics).some(t=>t.vote==='like'||t.vote==='ok');
-    case 'task':return !!(S.task.notes||S.errors.length);case 'mini':return !!S.mini.reveal;
+    case 'task':return !!(S.task.notes||S.errors.length);case 'mini':return !!S.mini.done;
   }return false;
 }
 function days(){if(!S.deadline)return null;const d=new Date(S.deadline+'T00:00:00');const n=Math.ceil((d-new Date())/86400000);return isNaN(n)?null:n;}
@@ -308,6 +392,79 @@ function band(id,kicker,q){
 }
 function sheet(id,kicker,q,body){const c=COL[id];return `<section class="sheet" style="--bg-c:${c[0]};--ac:${c[1]}">${band(id,kicker,q)}<div class="body">${body}</div></section>`;}
 const RO=()=>MODE==='student'?'readonly':'';
+const normA=s=>String(s||'').toLowerCase().trim().replace(/[’]/g,"'").replace(/\s+/g,' ');
+/* ---- mini-lesson: 4 sub-stages (words -> text+mistakes -> drill -> speak) ---- */
+function wordMatchHtml(words){
+  const L1=words.map((w,i)=>i), R1=words.map((w,i)=>i).sort(()=>Math.random()-.5);
+  return `<div class="mcol" data-side="w">${L1.map(i=>`<button type="button" class="mopt" data-wi="${i}" aria-pressed="false">${esc(words[i].w)}</button>`).join('')}</div>`+
+   `<div class="mcol" data-side="e">${R1.map(i=>`<button type="button" class="mopt" data-ei="${i}" aria-pressed="false">${esc(L(words[i].en,words[i].ua))}</button>`).join('')}</div>`;
+}
+function miniHtml(){
+  const mi=MINI[lvl()-1],st=S.mini.stage||0;
+  const dots=`<div class="ministeps">${[0,1,2,3].map(i=>`<i class="${i<=st?'on':''}"></i>`).join('')}</div>`;
+  let body='';
+  if(st===0){
+    body=`<p class="hint">${esc(U('wInstr'))}</p><div class="mm" id="wordMatch">${wordMatchHtml(mi.words)}</div>`;
+  }else if(st===1){
+    const txt=mi.text.replace(/<i class="m" data-f="([^"]*)">([^<]*)<\/i>/g,(a,f,w)=>`<i class="m" data-f="${f}">${w}</i><span class="fix"> → ${f}</span>`);
+    body=`<div id="miniBox" class="${S.mini.reveal?'rv':''}"><div class="text">${txt}</div>
+     <div class="hint" style="margin-top:10px;font-weight:600">${esc(L(mi.topic[0],mi.topic[1]))}</div>
+     <div class="rule">${esc(U('rule'))}: ${esc(L(mi.rule[0],mi.rule[1]))}</div>
+     <div class="t-only" style="margin-top:14px"><button class="btn" id="rv" type="button">${esc(S.mini.reveal?U('hide'):U('show'))}</button></div></div>`;
+  }else if(st===2){
+    body=mi.drill.map((d,i)=>{const parts=d.s.split('___');
+      return `<div class="drill" data-d="${i}"><p>${esc(parts[0])}<input class="gap" data-i="${i}" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">${esc(parts[1]||'')} <span class="hint">(${esc(d.base)})</span></p>
+       <div class="row2"><button class="btn" data-check="${i}" type="button">${esc(U('check'))}</button><button class="btn" data-show="${i}" type="button">${esc(U('showAns'))}</button><span class="res" id="dres${i}"></span></div></div>`;
+    }).join('');
+  }else if(st===3){
+    body=mi.speak.map(q=>`<p class="speakq">${esc(L(q[0],q[1]))}</p>`).join('');
+  }
+  const navBack=`<button class="btn" id="miniBack" type="button" ${st===0?'disabled':''}>← ${esc(U('prev'))}</button>`;
+  const navNext=`<button class="btn primary" id="miniNext" type="button">${st===3?esc(U('finish')):esc(U('next'))}</button>`;
+  return dots+body+`<div class="mininav">${navBack}${navNext}</div>`;
+}
+function wireMiniWords(){
+  const root=$('#wordMatch');if(!root)return;
+  let selW=null,selE=null;
+  const wBtn=i=>root.querySelector(`[data-wi="${i}"]`),eBtn=i=>root.querySelector(`[data-ei="${i}"]`);
+  function tryMatch(){
+    if(selW==null||selE==null)return;
+    if(selW===selE){
+      wBtn(selW).classList.add('ok');eBtn(selE).classList.add('ok');
+      wBtn(selW).disabled=true;eBtn(selE).disabled=true;selW=selE=null;
+    }else{
+      const w=wBtn(selW),e=eBtn(selE);w.classList.add('bad');e.classList.add('bad');
+      w.setAttribute('aria-pressed','false');e.setAttribute('aria-pressed','false');
+      setTimeout(()=>{w.classList.remove('bad');e.classList.remove('bad');},500);selW=selE=null;
+    }
+  }
+  root.querySelectorAll('[data-wi]').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;root.querySelectorAll('[data-wi]').forEach(x=>x.setAttribute('aria-pressed','false'));selW=+b.dataset.wi;b.setAttribute('aria-pressed','true');tryMatch();}));
+  root.querySelectorAll('[data-ei]').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;root.querySelectorAll('[data-ei]').forEach(x=>x.setAttribute('aria-pressed','false'));selE=+b.dataset.ei;b.setAttribute('aria-pressed','true');tryMatch();}));
+}
+function wireMiniDrill(){
+  const mi=MINI[lvl()-1],m=$('#main');
+  m.querySelectorAll('[data-check]').forEach(b=>b.addEventListener('click',()=>{
+    const i=+b.dataset.check,inp=m.querySelector(`.drill[data-d="${i}"] input.gap`),ok=normA(inp.value)===normA(mi.drill[i].ans);
+    inp.classList.toggle('ok',ok);inp.classList.toggle('bad',!ok&&inp.value.trim()!=='');
+    $('#dres'+i).textContent=ok?U('correct'):U('tryAgain');
+  }));
+  m.querySelectorAll('[data-show]').forEach(b=>b.addEventListener('click',()=>{
+    const i=+b.dataset.show,inp=m.querySelector(`.drill[data-d="${i}"] input.gap`);
+    inp.value=mi.drill[i].ans;inp.classList.add('ok');inp.classList.remove('bad');$('#dres'+i).textContent='';
+  }));
+}
+function wireMini(){
+  const st=S.mini.stage||0;
+  if(st===0)wireMiniWords();
+  if(st===1&&$('#rv'))$('#rv').addEventListener('click',()=>{S.mini.reveal=!S.mini.reveal;save();renderDetail();});
+  if(st===2)wireMiniDrill();
+  $('#miniBack').addEventListener('click',()=>{if((S.mini.stage||0)>0){S.mini.stage=(S.mini.stage||0)-1;save();renderDetail();}});
+  $('#miniNext').addEventListener('click',()=>{
+    const cur=S.mini.stage||0;
+    if(cur<3){S.mini.stage=cur+1;save();renderDetail();}
+    else{S.mini.done=true;save();view='map';render();}
+  });
+}
 function bindv(sel,key,obj){const el=$(sel);if(!el)return;el.addEventListener('input',e=>{(obj||S)[key]=e.target.value;save();});}
 function nodeTitle(id){const n=NODES.find(x=>x.id===id);return L(n.en,n.ua);}
 function renderDetail(){
@@ -328,9 +485,8 @@ function renderDetail(){
     h=sheet('task',nodeTitle('task'),L(t[0],t[1]),`${t[2]?`<div class="pic"><img src="picture.jpg" alt="" style="max-width:100%;max-height:60vh;border-radius:14px;display:block" onerror="this.replaceWith(document.createTextNode('Add picture.jpg next to this page'))"></div>`:''}<div class="tpanel t-only"><h2>Teacher</h2><textarea id="f1" placeholder="Notes while he speaks">${esc(S.task.notes)}</textarea><p class="hint">Add mistakes in the panel on the right.</p></div>`);
   }
   if(view==='mini'){
-    const mi=MINI[lvl()-1];
-    const txt=mi.text.replace(/<i class="m" data-f="([^"]*)">([^<]*)<\/i>/g,(a,f,w)=>`<i class="m" data-f="${f}">${w}</i><span class="fix"> → ${f}</span>`);
-    h=sheet('mini',nodeTitle('mini'),U('find'),`<div id="miniBox" class="${S.mini.reveal?'rv':''}"><div class="text">${txt}</div><div class="rule">${esc(U('rule'))}: ${esc(L(mi.rule[0],mi.rule[1]))}</div><div class="words" style="--bg-c:${COL.mini[0]}">${mi.words.map(w=>`<span>${esc(w[0])}${S.lang==='ua'?`<small>${esc(w[1])}</small>`:''}</span>`).join('')}</div><div class="t-only" style="margin-top:14px"><button class="btn" id="rv" type="button">${esc(S.mini.reveal?U('hide'):U('show'))}</button> <span class="hint">Level ${lvl()}. Change it in the panel.</span></div></div>`);
+    const qs=[U('wTitle'),U('find'),U('dTitle'),U('sTitle')];
+    h=sheet('mini',nodeTitle('mini'),qs[S.mini.stage||0],miniHtml());
   }
   if(view==='summary')h=summaryHtml();
   m.innerHTML=h;
@@ -340,7 +496,7 @@ function renderDetail(){
   if(view==='why'){bindv('#f1','why');bindv('#f2','deadline');if($('#f2'))$('#f2').addEventListener('change',()=>renderDetail());}
   if(view==='time'){bindv('#f1','perWeek');bindv('#f2','days');bindv('#f3','hw');}
   if(view==='task')bindv('#f1','notes',S.task);
-  if(view==='mini'&&$('#rv'))$('#rv').addEventListener('click',()=>{S.mini.reveal=!S.mini.reveal;save();renderDetail();});
+  if(view==='mini')wireMini();
   if(view==='topics'){
     m.querySelectorAll('.fc').forEach(fc=>{const i=+fc.dataset.i;
       const fl=fc.querySelector('.flip');
